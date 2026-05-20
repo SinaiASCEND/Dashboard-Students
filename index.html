@@ -38510,6 +38510,27 @@ function VariantD() {
     setFocusedMepo(null);
   }
 
+  // Navigate to a specific session inside its module's parent leaf
+  // (Foundations or Organ Systems). Used by AocsInline / ThreadsInline so
+  // clicking a session in those cross-cutting lists drops the user into the
+  // session detail inside the ASCEND Navigator browse view.
+  function navigateToSession(moduleId, sessionId) {
+    const m = window.CURRICULUM.MODULES.find((x) => x.id === moduleId);
+    if (!m) return;
+    let targetLeafId = null;
+    for (const node of BROWSE_TREE) {
+      if (node.kind === "leaf" && node.modulesFilter && node.modulesFilter(m)) {
+        targetLeafId = node.id;
+        break;
+      }
+    }
+    if (!targetLeafId) targetLeafId = "p1-found";
+    setLeafId(targetLeafId);
+    setOpenModule(moduleId);
+    setOpenSession(sessionId);
+    setFocusedMepo(null);
+  }
+
   // ── Sidebar renderer ──────────────────────────────────────────────
   function renderSidebar() {
     return (
@@ -38706,9 +38727,9 @@ function VariantD() {
           ) : leaf.special === "mepos" ? (
             <MeposInline focused={focusedMepo} setFocused={setFocusedMepo}/>
           ) : leaf.special === "aocs" ? (
-            <AocsInline/>
+            <AocsInline navigateToSession={navigateToSession}/>
           ) : leaf.special === "threads" ? (
-            <ThreadsInline/>
+            <ThreadsInline navigateToSession={navigateToSession}/>
           ) : leaf.modulesFilter ? (
             renderModuleBrowse()
           ) : leaf.items ? (
@@ -38853,12 +38874,102 @@ function MeposInline({ focused, setFocused }) {
   );
 }
 
+// ─── Session side panel (used by AOCs and Threads) ──────────────────────────
+// Compact session detail rendered to the right of the AOC/Thread session
+// list. Reuses the SLOs / MLOs / MEPOs structure from the main alignment
+// trace, but in a narrower 380px column with its own close button.
+function SessionSidePanel({ session, mod, onClose }) {
+  const C = window.CURRICULUM;
+  const S = window.SESSIONS || {};
+  const pack = mod && S[mod.id];
+  const alignment = React.useMemo(() => {
+    if (!session || !pack) return { mlos: [], mepos: [] };
+    const sessObjs = session.objectives || [];
+    if (sessObjs.length === 0) return { mlos: [], mepos: [] };
+    const mloNums = new Set();
+    sessObjs.forEach(o => (o.mlos || []).forEach(n => mloNums.add(n)));
+    const mlos = (pack.mlos || []).filter(m => {
+      const n = parseInt(m.code.split(" ")[1]);
+      return mloNums.has(n);
+    });
+    const mepoCodes = new Set();
+    mlos.forEach(m => (m.mepo || m.mepos || []).forEach(c => mepoCodes.add(c)));
+    const mepos = (C.MEPOS || []).filter(mep => {
+      for (const c of mepoCodes) {
+        if (c.replace(/\s+/g, "").toLowerCase() === mep.code.replace(/\s+/g, "").toLowerCase()) return true;
+      }
+      return false;
+    });
+    return { mlos, mepos };
+  }, [session, pack]);
+  if (!session) return null;
+  return (
+    <div style={{ width: 380, flex: "0 0 380px", background: "var(--paper)", border: "1px solid var(--grey-3)", borderRadius: 8, padding: 18, alignSelf: "flex-start", position: "sticky", top: 14, maxHeight: "calc(100vh - 80px)", overflowY: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+        <div className="t-eyebrow">Session detail</div>
+        <button onClick={onClose}
+                aria-label="Close session panel"
+                style={{ background: "transparent", border: "none", padding: 0, fontSize: 18, lineHeight: 1, color: "var(--grey-11)", cursor: "pointer" }}>×</button>
+      </div>
+      <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.35, marginBottom: 4 }}>{session.title}</div>
+      <div style={{ fontSize: 11, color: "var(--grey-11)", marginBottom: 12 }}>
+        {mod?.name}{session.week ? " · Week " + session.week : ""} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
+        {session.duration ? " · " + session.duration + " min" : ""}
+      </div>
+      {/* SLOs */}
+      {session.objectives && session.objectives.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6 }}>Session Learning Objectives</div>
+          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 }}>
+            {session.objectives.map((o, i) => <li key={i} style={{ marginBottom: 4 }}>{o.text}</li>)}
+          </ol>
+        </div>
+      )}
+      {/* MLOs */}
+      <div style={{ marginTop: 16 }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+          <div style={{ fontWeight: 600, fontSize: 12 }}>Module Learning Objectives</div>
+          <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{alignment.mlos.length}</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {alignment.mlos.map(m => (
+            <div key={m.code} style={{ borderLeft: "2px solid var(--brand-cyan)", paddingLeft: 10 }}>
+              <div style={{ fontWeight: 600, fontSize: 11.5 }}>{m.code}</div>
+              <div style={{ fontSize: 11, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.4 }}>{m.text}</div>
+              <div className="row" style={{ gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+                {(m.mepo || m.mepos || []).map(c => <span key={c} className="pill violet" style={{ fontSize: 10 }}>{c.replace(/\s+/g, "")}</span>)}
+              </div>
+            </div>
+          ))}
+          {!alignment.mlos.length && <div className="muted" style={{ fontSize: 11 }}>No MLOs aligned.</div>}
+        </div>
+      </div>
+      {/* MEPOs */}
+      <div style={{ marginTop: 16 }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+          <div style={{ fontWeight: 600, fontSize: 12 }}>Program Objectives (MEPOs)</div>
+          <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{alignment.mepos.length}</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {alignment.mepos.map(me => (
+            <div key={me.code} style={{ borderLeft: "2px solid var(--brand-violet)", paddingLeft: 10 }}>
+              <div style={{ fontWeight: 600, fontSize: 11.5 }}>{me.code}</div>
+              <div style={{ fontSize: 11, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.4 }}>{me.title}</div>
+            </div>
+          ))}
+          {!alignment.mepos.length && <div className="muted" style={{ fontSize: 11 }}>No MEPOs aligned.</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── AOCs inline ─────────────────────────────────────────────────────────────
 // Lists the four Areas of Concentration as cards. Clicking a card drills into
 // a list of every session in CURRICULUM.SESSIONS that's tagged with that AOC.
 // Each session row is clickable and opens the standard SearchResultDetail-style
 // inline detail card (right here, without leaving the AOCs tab).
-function AocsInline() {
+function AocsInline({ navigateToSession }) {
   const AOC_DEFS = [
     { code: "SSD", label: "Scientific & Scholarly Discovery",          color: "var(--brand-cyan)",    tint: "var(--brand-cyan-tint)",
       blurb: "Inquiry, research methods, scholarly product." },
@@ -38870,6 +38981,7 @@ function AocsInline() {
       blurb: "Leadership, teaching, communication, ethics." },
   ];
   const [selected, setSelected] = React.useState(null);
+  const [pickedSession, setPickedSession] = React.useState(null);
 
   // Build an index: aocCode → [{mod, session}, …]
   const sessionsByAoc = React.useMemo(() => {
@@ -38896,7 +39008,8 @@ function AocsInline() {
       byMod.get(r.mod.id).sessions.push(r.session);
     }
     return (
-      <>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
         <div className="section-head">
           <div>
             <button onClick={() => setSelected(null)}
@@ -38929,7 +39042,8 @@ function AocsInline() {
               </div>
               <div>
                 {sessions.map((s, i) => (
-                  <div key={s.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
+                  <button key={s.id} onClick={() => setPickedSession({ session: s, mod })}
+                          style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)", background: "transparent", border: "none", textAlign: "left", width: "100%", cursor: "pointer", fontFamily: "inherit" }}>
                     <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -38941,13 +39055,15 @@ function AocsInline() {
                       )}
                     </div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
           ))}
         </div>
-      </>
+        </div>
+        {pickedSession && (<SessionSidePanel session={pickedSession.session} mod={pickedSession.mod} onClose={() => setPickedSession(null)}/>)}
+      </div>
     );
   }
 
@@ -38992,7 +39108,7 @@ function AocsInline() {
 // Lists nine longitudinal threads. Each thread carries a list of keyword
 // regexes; matching is done across the session's title, methods, keywords,
 // clinical and societal fields. Click a thread → see all matching sessions.
-function ThreadsInline() {
+function ThreadsInline({ navigateToSession }) {
   const THREAD_DEFS = [
     { id: "ethics",   label: "Medical Ethics",          keywords: ["ethic", "bioethic"] },
     { id: "comm",     label: "Communication Skills",    keywords: ["communicat", "interview", "interpersonal", "rapport", "feedback"] },
@@ -39005,6 +39121,7 @@ function ThreadsInline() {
     { id: "ebm",      label: "Evidence-Based Medicine (EBM)", keywords: ["evidence-based", "evidence based", "EBM", "biostatistic", "epidemiolog", "appraisal", "clinical trial", "randomized"] },
   ];
   const [selected, setSelected] = React.useState(null);
+  const [pickedSession, setPickedSession] = React.useState(null);
 
   // Pre-build text-hay per session and match against each thread's keyword
   // regexes. Returns { threadId: [{mod, session, snippet}, ...] }
@@ -39038,7 +39155,8 @@ function ThreadsInline() {
       byMod.get(r.mod.id).sessions.push(r.session);
     }
     return (
-      <>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
         <div className="section-head">
           <div>
             <button onClick={() => setSelected(null)}
@@ -39071,20 +39189,23 @@ function ThreadsInline() {
               </div>
               <div>
                 {sessions.map((s, i) => (
-                  <div key={s.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
+                  <button key={s.id} onClick={() => setPickedSession({ session: s, mod })}
+                          style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)", background: "transparent", border: "none", textAlign: "left", width: "100%", cursor: "pointer", fontFamily: "inherit" }}>
                     <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{s.title}</div>
                     </div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
           ))}
         </div>
-      </>
+        </div>
+        {pickedSession && (<SessionSidePanel session={pickedSession.session} mod={pickedSession.mod} onClose={() => setPickedSession(null)}/>)}
+      </div>
     );
   }
 
