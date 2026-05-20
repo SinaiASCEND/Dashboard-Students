@@ -42540,10 +42540,24 @@ function StudentsRouter() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
   React.useEffect(() => {
+    const html = document.documentElement;
     const body = document.body;
+    const root = document.getElementById("root");
     if (isMobile) {
+      // Mobile root uses `height: 100%` and position absolute throughout; for
+      // that to compute non-zero we have to give html, body, and #root an
+      // explicit height. Otherwise the outermost mobile container collapses
+      // to 0px and the entire UI renders blank.
+      html.style.height = "100%";
+      body.style.height = "100%";
+      if (root) root.style.height = "100%";
       body.style.margin = "0"; body.style.padding = "0"; body.style.background = "#F8F9FB"; body.style.overscrollBehavior = "none"; body.style.fontFamily = "'Inter Tight', system-ui, sans-serif";
-    } else { body.style.margin = ""; body.style.padding = ""; body.style.background = ""; body.style.overscrollBehavior = ""; body.style.fontFamily = ""; }
+    } else {
+      html.style.height = "";
+      body.style.height = "";
+      if (root) root.style.height = "";
+      body.style.margin = ""; body.style.padding = ""; body.style.background = ""; body.style.overscrollBehavior = ""; body.style.fontFamily = "";
+    }
   }, [isMobile]);
   return isMobile ? <window.MobileApp /> : <window.AppShell />;
 }
