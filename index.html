@@ -38338,8 +38338,6 @@ const { useState: useStateD, useMemo: useMemoD } = React;
 //
 // Counts in the right-hand badge are derived from modulesFilter / items.length.
 const BROWSE_TREE = [
-  { kind: "section-header", label: "ASCEND Phases" },
-
   { kind: "leaf", id: "legacy", label: "Legacy Curriculum", sub: "Pre-triphasic clerkships & AIs",
     items: [
       { id: "lc-amb", label: "Ambulatory Care-Geriatrics Clerkship",    placeholder: true },
@@ -38361,6 +38359,8 @@ const BROWSE_TREE = [
             ] },
         ] },
     ] },
+
+  { kind: "section-header", label: "ASCEND Phases" },
 
   { kind: "group-header", label: "Phase 1" },
   { kind: "leaf", id: "p1-found", label: "Foundations",    indent: 1, modulesFilter: m => m.phase === "Foundations" },
