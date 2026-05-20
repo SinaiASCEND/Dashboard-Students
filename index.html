@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=1480" />
 <script>(function(){try{if(window.screen&&window.screen.width<768){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=device-width, initial-scale=1, viewport-fit=cover');}}catch(e){}})();</script>
-<title>Student Dashboard</title>
+<title>ASCEND Curriculum</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -31940,9 +31940,9 @@ window.CURRICULUM = (function() {
     { id: "behav",  name: "Behavioral Science",                         short: "Behavioral",year: "M1", phase: "Systems",     weeks: 4,  cohort: 142, mloCount: realMloCount("behav", 9), real: true },
     { id: "card",   name: "Cardiology",                                 short: "Cardio",    year: "M1", phase: "Systems",     weeks: 5,  cohort: 142, mloCount: realMloCount("card", 7),  real: true },
     { id: "pulm",   name: "Pulmonary Medicine",                         short: "Pulm",      year: "M1", phase: "Systems",     weeks: 4,  cohort: 142, mloCount: realMloCount("pulm", 6),  real: true },
-    { id: "renal",  name: "Renal",                                      short: "Renal",     year: "M1", phase: "Systems",     weeks: 4,  cohort: 142, mloCount: realMloCount("renal", 6), real: true },
+    { id: "renal",  name: "Renal",                                      short: "Renal",     year: "M2", phase: "Systems",     weeks: 4,  cohort: 142, mloCount: realMloCount("renal", 6), real: true },
     // M2 Systems
-    { id: "heme",   name: "Hematology",                                 short: "Heme",      year: "M2", phase: "Systems",     weeks: 4,  cohort: 138, mloCount: realMloCount("heme", 6),  real: true },
+    { id: "heme",   name: "Hematology",                                 short: "Heme",      year: "M1", phase: "Systems",     weeks: 4,  cohort: 138, mloCount: realMloCount("heme", 6),  real: true },
     { id: "endo",   name: "Endocrinology",                              short: "Endo",      year: "M2", phase: "Systems",     weeks: 4,  cohort: 138, mloCount: realMloCount("endo", 6),  real: true },
     { id: "gusrh",  name: "GU & Sexual / Reproductive Health",          short: "GU-SRH",    year: "M2", phase: "Systems",     weeks: 5,  cohort: 138, mloCount: realMloCount("gusrh", 6), real: true },
     { id: "gi",     name: "Gastroenterology",                           short: "GI",        year: "M2", phase: "Systems",     weeks: 4,  cohort: 138, mloCount: realMloCount("gi", 6),    real: true },
@@ -31953,7 +31953,9 @@ window.CURRICULUM = (function() {
     { id: "pom3",   name: "Practice of Medicine 3",                     short: "POM 3",     year: "M3", phase: "Longitudinal",weeks: 48, cohort: 134, mloCount: 8 },
     { id: "thinq",  name: "The Inquiry (THINQ) Curriculum",             short: "THINQ",     year: "M1–M4", phase: "Longitudinal", weeks: 144, cohort: 142, mloCount: 6 },
     // Capstone — performance / standardized-patient assessments at end of each year
-    { id: "peaks1", name: "PEAKS 1",                                       short: "PEAKS 1",   year: "M1", phase: "Capstone",    weeks: 1,  cohort: 142, mloCount: 8 },
+    { id: "peaks1", name: "Periodic Assessment of Knowledge and Skills (PEAKS) 1", short: "PEAKS 1", year: "M1", phase: "Capstone",    weeks: 1,  cohort: 142, mloCount: 8 },
+    { id: "peaks2", name: "Periodic Assessment of Knowledge and Skills (PEAKS) 2", short: "PEAKS 2", year: "M2", phase: "Capstone",    weeks: 1,  cohort: 138, mloCount: 8 },
+    { id: "peaks3", name: "Periodic Assessment of Knowledge and Skills (PEAKS) 3", short: "PEAKS 3", year: "M3", phase: "Capstone",    weeks: 1,  cohort: 134, mloCount: 8 },
   ];
 
   // ---------- Anatomy real data ----------
@@ -36352,7 +36354,7 @@ function SessionDetailOverlay({ item, onClose, onOpenInTrace }) {
         </div>
         <button
           onClick={onOpenInTrace}
-          title="Open in Sessions & Alignment lens"
+          title="Open in ASCEND Navigator"
           style={{ background: "var(--brand-cyan)", color: "white", border: "none", borderRadius: 6, padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", gap: 6 }}>
           Open in alignment trace
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -36507,11 +36509,11 @@ function VariantA() {
   const C = window.CURRICULUM;
   const mod = C.MODULES.find(m => m.id === moduleId);
   const crumbs = view === "overview"
-    ? ["Curriculum", "All Modules · 2025"]
-    : view === "module" ? ["Curriculum", mod.name]
-    : view === "mlo" ? ["Curriculum", mod.name, "MLO Coverage"]
-    : view === "mepo" ? ["Curriculum", "MEPO Map"]
-    : ["Curriculum", "Accreditation Export"];
+    ? ["ASCEND Curriculum", "All Modules · 2025"]
+    : view === "module" ? ["ASCEND Curriculum", mod.name]
+    : view === "mlo" ? ["ASCEND Curriculum", mod.name, "MLO Coverage"]
+    : view === "mepo" ? ["ASCEND Curriculum", "MEPO Map"]
+    : ["ASCEND Curriculum", "Accreditation Export"];
 
   return (
     <div className="dash" data-screen-label={`A · ${view}`}>
@@ -38336,15 +38338,11 @@ const { useState: useStateD, useMemo: useMemoD } = React;
 //
 // Counts in the right-hand badge are derived from modulesFilter / items.length.
 const BROWSE_TREE = [
-  { kind: "section-header", label: "Curricular Affairs" },
-  { kind: "leaf", id: "oca",   label: "OCA Leadership", special: "oca" },
-  { kind: "leaf", id: "mepos", label: "MEPOs", special: "mepos" },
-
-  { kind: "section-header", label: "Browse the Curriculum" },
+  { kind: "section-header", label: "ASCEND Phases" },
 
   { kind: "leaf", id: "legacy", label: "Legacy Curriculum", sub: "Pre-triphasic clerkships & AIs",
     items: [
-      { id: "lc-amb", label: "Ambulatory Care Clerkship",    placeholder: true },
+      { id: "lc-amb", label: "Ambulatory Care-Geriatrics Clerkship",    placeholder: true },
       { id: "lc-em",  label: "Emergency Medicine Clerkship", placeholder: true },
       { id: "lc-ttr", label: "Transition to Residency",      placeholder: true },
       { id: "lc-ai",  label: "Acting Internships", sub: "4 specialties · click to expand",
@@ -38370,36 +38368,36 @@ const BROWSE_TREE = [
 
   { kind: "leaf", id: "p2", label: "Phase 2", sub: "Core clerkships",
     items: [
-      { id: "p2-im",    label: "Inpatient Medicine Clerkship",  placeholder: true },
-      { id: "p2-surg",  label: "Surgery Clerkship",             placeholder: true },
-      { id: "p2-peds",  label: "Pediatrics Clerkship",          placeholder: true },
-      { id: "p2-obgyn", label: "OB/GYN Clerkship",              placeholder: true },
-      { id: "p2-psych", label: "Psychiatry Clerkship",          placeholder: true },
-      { id: "p2-neuro", label: "Neurology Clerkship",           placeholder: true },
       { id: "p2-em",    label: "Emergency Medicine Clerkship",  placeholder: true },
+      { id: "p2-im",    label: "Inpatient Medicine Clerkship",  placeholder: true },
+      { id: "p2-neuro", label: "Neurology Clerkship",           placeholder: true },
+      { id: "p2-obgyn", label: "OB/GYN Clerkship",              placeholder: true },
       { id: "p2-pal",   label: "Palliative Care Clerkship",     placeholder: true },
+      { id: "p2-peds",  label: "Pediatrics Clerkship",          placeholder: true },
+      { id: "p2-psych", label: "Psychiatry Clerkship",          placeholder: true },
+      { id: "p2-surg",  label: "Surgery Clerkship",             placeholder: true },
     ] },
 
   { kind: "leaf", id: "p3", label: "Phase 3", sub: "TTR · CCC · Acting Internships",
     items: [
-      { id: "p3-ttr", label: "Transition to Residency", placeholder: true },
-      { id: "p3-ccc", label: "Chronic Care Clerkship",  placeholder: true },
       { id: "p3-ai",  label: "Acting Internships", sub: "5 specialties · click to expand",
         children: [
-          { id: "ai-med",  label: "AI — Medicine",            placeholder: true },
           { id: "ai-em",   label: "AI — Emergency Medicine",  placeholder: true },
-          { id: "ai-peds", label: "AI — Pediatrics",          placeholder: true },
           { id: "ai-surg", label: "AI — General Surgery",     placeholder: true },
+          { id: "ai-med",  label: "AI — Medicine",            placeholder: true },
+          { id: "ai-peds", label: "AI — Pediatrics",          placeholder: true },
           { id: "ai-sub",  label: "AI — Subspecialty", sub: "6 subspecialties",
             children: [
-              { id: "ai-uro",     label: "AI — Urology",          placeholder: true },
-              { id: "ai-plastic", label: "AI — Plastic Surgery",  placeholder: true },
               { id: "ai-ent",     label: "AI — ENT",              placeholder: true },
-              { id: "ai-vasc",    label: "AI — Vascular Surgery", placeholder: true },
-              { id: "ai-ortho",   label: "AI — Orthopedics",      placeholder: true },
               { id: "ai-nsx",     label: "AI — Neurosurgery",     placeholder: true },
+              { id: "ai-ortho",   label: "AI — Orthopedics",      placeholder: true },
+              { id: "ai-plastic", label: "AI — Plastic Surgery",  placeholder: true },
+              { id: "ai-uro",     label: "AI — Urology",          placeholder: true },
+              { id: "ai-vasc",    label: "AI — Vascular Surgery", placeholder: true },
             ] },
         ] },
+      { id: "p3-ccc", label: "Chronic Care Clerkship",  placeholder: true },
+      { id: "p3-ttr", label: "Transition to Residency", placeholder: true },
     ] },
 
   { kind: "leaf", id: "long",  label: "Longitudinal", sub: "POM 1–3 · THINQ", modulesFilter: m => m.phase === "Longitudinal" },
@@ -38410,6 +38408,14 @@ const BROWSE_TREE = [
       { id: "tr-tp2", label: "Transition to Phase 2 (TP2)", placeholder: true },
       { id: "tr-tp3", label: "Transition to Phase 3 (TP3)", placeholder: true },
     ] },
+
+  { kind: "section-header", label: "Cross-Cutting" },
+  { kind: "leaf", id: "aocs",    label: "Areas of Concentration (AOCs)", special: "aocs" },
+  { kind: "leaf", id: "threads", label: "Curricular Threads",            special: "threads" },
+
+  { kind: "section-header", label: "Curricular Affairs" },
+  { kind: "leaf", id: "mepos", label: "MEPOs",                 special: "mepos" },
+  { kind: "leaf", id: "oca",   label: "Curricular Leadership", special: "oca" },
 ];
 
 function findLeafById(id) {
@@ -38435,8 +38441,11 @@ function VariantD() {
   }
 
   const [leafId, setLeafId] = useStateD(initialLeafId());
-  const [openModule, setOpenModule] = useStateD(initialModule);
-  const [openSession, setOpenSession] = useStateD(initialSession);
+  // Only auto-open a module if the user deep-linked from elsewhere (e.g.
+  // "Open in alignment trace" from another lens). Otherwise start with no
+  // module expanded — the user picks which one to drill into.
+  const [openModule, setOpenModule] = useStateD(navIn?.kind === "trace" && navIn.moduleId ? navIn.moduleId : null);
+  const [openSession, setOpenSession] = useStateD(navIn?.kind === "trace" && navIn.sessionId ? navIn.sessionId : null);
   const [hoveredObjIdx, setHoveredObjIdx] = useStateD(null);
   const [typeFilter, setTypeFilter] = useStateD(new Set());
   const [typeFilterOpen, setTypeFilterOpen] = useStateD(false);
@@ -38493,7 +38502,7 @@ function VariantD() {
   }, [session, hoveredObjIdx, sessionPack]);
 
   const showRightRail = !!(leaf && leaf.modulesFilter);
-  const crumbs = ["Curriculum", leaf && leaf.label, activeMod?.short, session?.title].filter(Boolean);
+  const crumbs = ["ASCEND Curriculum", leaf && leaf.label, activeMod?.short, session?.title].filter(Boolean);
   const screenLabel = leaf ? "D · " + (leaf.id) + (session ? " · " + session.id : "") : "D";
 
   function selectLeaf(id) {
@@ -38664,10 +38673,13 @@ function VariantD() {
                   <Pill kind="muted">n={m.cohort}</Pill>
                 </div>
                 {isOpen && (
-                  pack ? <SessionList pack={pack} mod={m}
+                  pack ? <>
+                    <ModuleSummaryCardD m={m} pack={pack}/>
+                    <SessionList pack={pack} mod={m}
                             openSession={openSession} setOpenSession={setOpenSession}
                             setHoveredObjIdx={setHoveredObjIdx}
                             typeFilter={typeFilter} />
+                  </>
                   : <div style={{ padding: "16px 20px", fontSize: 12.5, color: "var(--grey-11)", borderTop: "1px solid var(--grey-2)", fontStyle: "italic" }}>
                       Session blueprint not yet uploaded for {m.name}. Upload the session schedule to populate this trace view.
                     </div>
@@ -38682,7 +38694,7 @@ function VariantD() {
 
   return (
     <div className="dash" data-screen-label={screenLabel}>
-      <Topbar variantLabel="Sessions & Alignment" crumbs={crumbs} />
+      <Topbar variantLabel="ASCEND Navigator" crumbs={crumbs} />
       <div style={{ display: "flex", minHeight: 980 }}>
         {renderSidebar()}
 
@@ -38693,6 +38705,10 @@ function VariantD() {
             <OcaInline/>
           ) : leaf.special === "mepos" ? (
             <MeposInline focused={focusedMepo} setFocused={setFocusedMepo}/>
+          ) : leaf.special === "aocs" ? (
+            <AocsInline/>
+          ) : leaf.special === "threads" ? (
+            <ThreadsInline/>
           ) : leaf.modulesFilter ? (
             renderModuleBrowse()
           ) : leaf.items ? (
@@ -38837,32 +38853,313 @@ function MeposInline({ focused, setFocused }) {
   );
 }
 
+// ─── AOCs inline ─────────────────────────────────────────────────────────────
+// Lists the four Areas of Concentration as cards. Clicking a card drills into
+// a list of every session in CURRICULUM.SESSIONS that's tagged with that AOC.
+// Each session row is clickable and opens the standard SearchResultDetail-style
+// inline detail card (right here, without leaving the AOCs tab).
+function AocsInline() {
+  const AOC_DEFS = [
+    { code: "SSD", label: "Scientific & Scholarly Discovery",          color: "var(--brand-cyan)",    tint: "var(--brand-cyan-tint)",
+      blurb: "Inquiry, research methods, scholarly product." },
+    { code: "PCA", label: "Patient-Centered Advocacy",                 color: "var(--brand-magenta)", tint: "var(--brand-magenta-tint)",
+      blurb: "Advocacy for individual patients and populations." },
+    { code: "HDS", label: "Healthcare Delivery Science",               color: "var(--brand-violet)",  tint: "var(--brand-violet-tint)",
+      blurb: "Quality, safety, systems-based practice." },
+    { code: "LPI", label: "Leadership & Professional Identity Formation", color: "var(--good)",       tint: "var(--good-tint)",
+      blurb: "Leadership, teaching, communication, ethics." },
+  ];
+  const [selected, setSelected] = React.useState(null);
+
+  // Build an index: aocCode → [{mod, session}, …]
+  const sessionsByAoc = React.useMemo(() => {
+    const C = window.CURRICULUM;
+    const S = window.SESSIONS || {};
+    const out = { SSD: [], PCA: [], HDS: [], LPI: [] };
+    for (const m of (C.MODULES || [])) {
+      const pack = S[m.id]; if (!pack) continue;
+      for (const s of (pack.sessions || [])) {
+        const tag = (s.aoc || "").trim().toUpperCase();
+        if (out[tag]) out[tag].push({ mod: m, session: s });
+      }
+    }
+    return out;
+  }, []);
+
+  if (selected) {
+    const def = AOC_DEFS.find(d => d.code === selected);
+    const rows = sessionsByAoc[selected] || [];
+    // Group rows by module for readability.
+    const byMod = new Map();
+    for (const r of rows) {
+      if (!byMod.has(r.mod.id)) byMod.set(r.mod.id, { mod: r.mod, sessions: [] });
+      byMod.get(r.mod.id).sessions.push(r.session);
+    }
+    return (
+      <>
+        <div className="section-head">
+          <div>
+            <button onClick={() => setSelected(null)}
+                    style={{ background: "transparent", border: "none", padding: 0, fontSize: 12, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600, marginBottom: 6 }}>
+              ← All AOCs
+            </button>
+            <div className="t-eyebrow" style={{ color: def.color }}>{def.code}</div>
+            <h2 className="t-serif" style={{ marginTop: 4 }}>{def.label}</h2>
+            <div className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
+              {rows.length} session{rows.length === 1 ? "" : "s"} aligned across {byMod.size} module{byMod.size === 1 ? "" : "s"}
+            </div>
+          </div>
+        </div>
+        <div className="col" style={{ gap: 14, marginTop: 14 }}>
+          {byMod.size === 0 && (
+            <div className="card" style={{ padding: "28px 22px", textAlign: "center", color: "var(--grey-11)", fontSize: 13 }}>
+              No sessions yet tagged with {def.code}.
+            </div>
+          )}
+          {[...byMod.values()].map(({ mod, sessions }) => (
+            <div key={mod.id} className="card" style={{ overflow: "hidden" }}>
+              <div className="card-header" style={{ alignItems: "baseline" }}>
+                <div>
+                  <div className="card-title">{mod.name}</div>
+                  <div className="card-meta" style={{ marginTop: 2 }}>
+                    {mod.year} · {mod.phase === "Systems" ? "Organ Systems" : mod.phase}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--grey-11)", fontFamily: "var(--font-mono)" }}>{sessions.length}</div>
+              </div>
+              <div>
+                {sessions.map((s, i) => (
+                  <div key={s.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
+                    <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
+                    <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{s.title}</div>
+                      {s.aocSubdomain && (
+                        <div style={{ fontSize: 11, color: "var(--ink-2)", marginTop: 2 }}>
+                          Subdomain: <span style={{ color: def.color, fontWeight: 600 }}>{s.aocSubdomain}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="section-head">
+        <div>
+          <div className="t-eyebrow">Cross-Cutting</div>
+          <h2 className="t-serif" style={{ marginTop: 6, marginBottom: 4 }}>Areas of Concentration (AOCs)</h2>
+          <div className="muted" style={{ fontSize: 12.5 }}>
+            Four longitudinal areas of concentration spanning Phases 1–3. Click any AOC to see all sessions tagged with it.
+          </div>
+        </div>
+      </div>
+      <div className="grid-12" style={{ marginTop: 14, gap: 12 }}>
+        {AOC_DEFS.map(def => {
+          const count = (sessionsByAoc[def.code] || []).length;
+          return (
+            <div key={def.code} className="card" style={{ gridColumn: "span 6", overflow: "hidden", cursor: "pointer", borderLeft: "4px solid " + def.color }}
+                 onClick={() => setSelected(def.code)}>
+              <div style={{ padding: "16px 18px" }}>
+                <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: def.color, fontWeight: 700, letterSpacing: 0.3 }}>{def.code}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4 }}>{def.label}</div>
+                    <div className="muted" style={{ fontSize: 12, marginTop: 4, lineHeight: 1.45 }}>{def.blurb}</div>
+                  </div>
+                  <div style={{ background: def.tint, color: def.color, padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                    {count} session{count === 1 ? "" : "s"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ─── Curricular Threads inline ───────────────────────────────────────────────
+// Lists nine longitudinal threads. Each thread carries a list of keyword
+// regexes; matching is done across the session's title, methods, keywords,
+// clinical and societal fields. Click a thread → see all matching sessions.
+function ThreadsInline() {
+  const THREAD_DEFS = [
+    { id: "ethics",   label: "Medical Ethics",          keywords: ["ethic", "bioethic"] },
+    { id: "comm",     label: "Communication Skills",    keywords: ["communicat", "interview", "interpersonal", "rapport", "feedback"] },
+    { id: "nutr",     label: "Nutrition",               keywords: ["nutrition", "diet", "obesity", "metabolic syndrome"] },
+    { id: "ai",       label: "Artificial Intelligence", keywords: ["artificial intelligence", "machine learning", "\\bAI\\b"] },
+    { id: "pharm",    label: "Pharmacology",            keywords: ["pharmacolog", "pharmacokinetic", "pharmacodynamic", "pharmacotherap", "drug"] },
+    { id: "physio",   label: "Physiology",              keywords: ["physiolog"] },
+    { id: "embryo",   label: "Embryology",              keywords: ["embryolog", "embryonic", "fetal develop"] },
+    { id: "micro",    label: "Microbiology",            keywords: ["microbiolog", "bacteri", "virus", "viral", "fungus", "parasite", "pathogen", "antibiotic", "antimicrobial"] },
+    { id: "ebm",      label: "Evidence-Based Medicine (EBM)", keywords: ["evidence-based", "evidence based", "EBM", "biostatistic", "epidemiolog", "appraisal", "clinical trial", "randomized"] },
+  ];
+  const [selected, setSelected] = React.useState(null);
+
+  // Pre-build text-hay per session and match against each thread's keyword
+  // regexes. Returns { threadId: [{mod, session, snippet}, ...] }
+  const sessionsByThread = React.useMemo(() => {
+    const C = window.CURRICULUM;
+    const S = window.SESSIONS || {};
+    const out = {};
+    for (const t of THREAD_DEFS) out[t.id] = [];
+    const regexByThread = Object.fromEntries(THREAD_DEFS.map(t => [t.id, t.keywords.map(k => new RegExp(k, "i"))]));
+    for (const m of (C.MODULES || [])) {
+      const pack = S[m.id]; if (!pack) continue;
+      for (const s of (pack.sessions || [])) {
+        const hay = [s.title, s.methods, s.keywords, s.clinical, s.societal,
+                     ...((s.objectives || []).map(o => o.text))].filter(Boolean).join(" ");
+        for (const t of THREAD_DEFS) {
+          if (regexByThread[t.id].some(rx => rx.test(hay))) {
+            out[t.id].push({ mod: m, session: s });
+          }
+        }
+      }
+    }
+    return out;
+  }, []);
+
+  if (selected) {
+    const def = THREAD_DEFS.find(d => d.id === selected);
+    const rows = sessionsByThread[selected] || [];
+    const byMod = new Map();
+    for (const r of rows) {
+      if (!byMod.has(r.mod.id)) byMod.set(r.mod.id, { mod: r.mod, sessions: [] });
+      byMod.get(r.mod.id).sessions.push(r.session);
+    }
+    return (
+      <>
+        <div className="section-head">
+          <div>
+            <button onClick={() => setSelected(null)}
+                    style={{ background: "transparent", border: "none", padding: 0, fontSize: 12, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600, marginBottom: 6 }}>
+              ← All Threads
+            </button>
+            <div className="t-eyebrow">Curricular Thread</div>
+            <h2 className="t-serif" style={{ marginTop: 4 }}>{def.label}</h2>
+            <div className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
+              {rows.length} session{rows.length === 1 ? "" : "s"} matched via keyword search across {byMod.size} module{byMod.size === 1 ? "" : "s"}.
+            </div>
+          </div>
+        </div>
+        <div className="col" style={{ gap: 14, marginTop: 14 }}>
+          {byMod.size === 0 && (
+            <div className="card" style={{ padding: "28px 22px", textAlign: "center", color: "var(--grey-11)", fontSize: 13 }}>
+              No matching sessions found in the current curriculum map.
+            </div>
+          )}
+          {[...byMod.values()].map(({ mod, sessions }) => (
+            <div key={mod.id} className="card" style={{ overflow: "hidden" }}>
+              <div className="card-header" style={{ alignItems: "baseline" }}>
+                <div>
+                  <div className="card-title">{mod.name}</div>
+                  <div className="card-meta" style={{ marginTop: 2 }}>
+                    {mod.year} · {mod.phase === "Systems" ? "Organ Systems" : mod.phase}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--grey-11)", fontFamily: "var(--font-mono)" }}>{sessions.length}</div>
+              </div>
+              <div>
+                {sessions.map((s, i) => (
+                  <div key={s.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
+                    <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
+                    <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{s.title}</div>
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="section-head">
+        <div>
+          <div className="t-eyebrow">Cross-Cutting</div>
+          <h2 className="t-serif" style={{ marginTop: 6, marginBottom: 4 }}>Curricular Threads</h2>
+          <div className="muted" style={{ fontSize: 12.5, lineHeight: 1.5, maxWidth: 720 }}>
+            Longitudinal threads spanning the entire ASCEND curriculum. Each thread surfaces sessions matched via keyword search across session titles, methods, keywords, and objectives — refine the rules as the curriculum map evolves.
+          </div>
+        </div>
+      </div>
+      <div className="grid-12" style={{ marginTop: 14, gap: 10 }}>
+        {THREAD_DEFS.map(def => {
+          const count = (sessionsByThread[def.id] || []).length;
+          return (
+            <div key={def.id} className="card" style={{ gridColumn: "span 4", overflow: "hidden", cursor: "pointer" }}
+                 onClick={() => setSelected(def.id)}>
+              <div style={{ padding: "14px 16px" }}>
+                <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.25 }}>{def.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--brand-cyan-deep)", background: "var(--brand-cyan-tint)", padding: "2px 8px", borderRadius: 999, fontWeight: 700, flexShrink: 0 }}>
+                    {count}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 function PlaceholderBrowseInline({ leaf, expandedSet, setExpandedSet }) {
+  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [selectedPath, setSelectedPath] = React.useState([]);
+
   function toggle(id) {
     const next = new Set(expandedSet);
     if (next.has(id)) next.delete(id); else next.add(id);
     setExpandedSet(next);
   }
-  function renderItem(item, depth) {
+
+  if (selectedItem) {
+    return <PlaceholderDetailInline item={selectedItem} leaf={leaf} path={selectedPath} onBack={() => { setSelectedItem(null); setSelectedPath([]); }}/>;
+  }
+
+  function renderItem(item, depth, ancestry) {
     const hasChildren = !!(item.children && item.children.length);
     const isOpen = expandedSet.has(item.id);
+    const onClick = hasChildren
+      ? () => toggle(item.id)
+      : item.placeholder
+        ? () => { setSelectedItem(item); setSelectedPath(ancestry); }
+        : undefined;
     return (
       <div key={item.id} className="card" style={{ padding: 0, overflow: "hidden" }}>
         <div
-          onClick={hasChildren ? () => toggle(item.id) : undefined}
-          style={{ padding: "14px 16px 14px " + (16 + depth * 18) + "px", display: "flex", alignItems: "center", gap: 12, cursor: hasChildren ? "pointer" : "default", background: isOpen ? "var(--brand-cyan-tint)" : "transparent" }}>
+          onClick={onClick}
+          style={{ padding: "14px 16px 14px " + (16 + depth * 18) + "px", display: "flex", alignItems: "center", gap: 12, cursor: onClick ? "pointer" : "default", background: isOpen ? "var(--brand-cyan-tint)" : "transparent" }}>
           {hasChildren ? <Caret open={isOpen}/> : <span style={{ width: 12, flex: "0 0 12px" }}/>}
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 14 }}>{item.label}</div>
             <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 2, fontStyle: "italic" }}>
-              {item.sub || (item.placeholder ? "Placeholder · awaiting curriculum map" : "")}
+              {item.sub || (item.placeholder ? "Placeholder · click for summary" : "")}
             </div>
           </div>
           {hasChildren && <span className="pill violet">{item.children.length}</span>}
         </div>
         {hasChildren && isOpen && (
           <div style={{ borderTop: "1px solid var(--grey-2)" }}>
-            {item.children.map(child => renderItem(child, depth + 1))}
+            {item.children.map(child => renderItem(child, depth + 1, [...ancestry, item.label]))}
           </div>
         )}
       </div>
@@ -38878,9 +39175,159 @@ function PlaceholderBrowseInline({ leaf, expandedSet, setExpandedSet }) {
         </div>
       </div>
       <div className="col" style={{ gap: 10, marginTop: 14 }}>
-        {leaf.items.map(item => renderItem(item, 0))}
+        {leaf.items.map(item => renderItem(item, 0, [leaf.label]))}
       </div>
     </>
+  );
+}
+
+// Standardized placeholder-detail card for clerkships / AIs / activities.
+// Mirrors the mobile layout: 3 stat tiles (Phase / Year / Curricular Weeks)
+// + summary card with Full Name, Short Code, Director(s), # RCEs,
+// Clinical Sites. The summary's title is "Clerkship Summary",
+// "Acting Internship Summary", or "Activity Summary" depending on kind.
+function PlaceholderDetailInline({ item, leaf, path, onBack }) {
+  const [open, setOpen] = React.useState(false);
+  const meta = (window.PLACEHOLDER_META && window.PLACEHOLDER_META[item.id]) || {};
+  const kind = meta.kind || "activity";
+  const summaryLabel =
+    kind === "ai"        ? "Acting Internship Summary" :
+    kind === "clerkship" ? "Clerkship Summary" :
+    kind === "module"    ? "Module Summary" :
+                           "Activity Summary";
+  const kindEyebrow =
+    kind === "ai"        ? "Acting Internship" :
+    kind === "clerkship" ? "Clerkship" :
+    kind === "module"    ? "Module" :
+                           "Activity";
+  const showSites = kind === "ai" || kind === "clerkship";
+  const phaseLabel = meta.phase || "—";
+  const yearLabel  = meta.year || "—";
+  const weeksLabel = meta.weeks ? meta.weeks + " wk" : "—";
+  const directors  = meta.directors || "—";
+  const shortCode  = meta.shortCode || "—";
+  return (
+    <>
+      <div className="section-head">
+        <div>
+          <button onClick={onBack}
+                  style={{ background: "transparent", border: "none", padding: 0, fontSize: 12, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600, marginBottom: 6 }}>
+            ← Back to {leaf.label}
+          </button>
+          <div className="t-eyebrow">
+            {kindEyebrow}
+            {path && path.length ? " · " + path.join(" · ") : ""}
+          </div>
+          <h2 className="t-serif" style={{ marginTop: 4 }}>{item.label}</h2>
+        </div>
+      </div>
+      {/* Stat tiles */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 14, marginBottom: 10 }}>
+        <DesktopStatTile label="Phase"            value={phaseLabel}/>
+        <DesktopStatTile label="Year"             value={yearLabel}/>
+        <DesktopStatTile label="Curricular Weeks" value={weeksLabel}/>
+      </div>
+      {/* Collapsible summary */}
+      <button onClick={() => setOpen(v => !v)}
+              style={{ background: "transparent", border: "none", padding: "8px 0", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit", color: "var(--brand-cyan-deep)", fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
+        <Caret open={open}/>
+        {open ? "Hide " + summaryLabel : "Show " + summaryLabel}
+      </button>
+      {open && (
+        <div className="card" style={{ padding: "16px 20px", marginBottom: 14 }}>
+          <DesktopRow k="Full name"      v={item.label}/>
+          <DesktopRow k="Short code"     v={shortCode}/>
+          <DesktopRow k="Director(s)"    v={directors} last={!showSites}/>
+          {showSites && <DesktopRow k="# RCEs"         v="—"/>}
+          {showSites && <DesktopRow k="Clinical sites" v="—" last/>}
+        </div>
+      )}
+      <div className="card" style={{ padding: "14px 18px", fontSize: 12.5, color: "var(--grey-11)", lineHeight: 1.55 }}>
+        <span style={{ color: "var(--ink-2)", fontWeight: 600 }}>Awaiting curriculum map.</span>{" "}
+        Sessions, MLOs, and MEPO alignment for {item.label} will appear here once ingested.
+      </div>
+    </>
+  );
+}
+
+function DesktopStatTile({ label, value }) {
+  return (
+    <div style={{ background: "var(--paper)", border: "1px solid var(--grey-2)", borderRadius: 8, padding: "12px 14px" }}>
+      <div style={{ fontSize: 10.5, color: "var(--grey-11)", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 600, color: "var(--ink-1)", lineHeight: 1.2 }}>{value}</div>
+    </div>
+  );
+}
+function DesktopRow({ k, v, last }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: last ? "none" : "1px solid var(--grey-2)", fontSize: 13.5, alignItems: "baseline", gap: 16 }}>
+      <div style={{ color: "var(--grey-11)" }}>{k}</div>
+      <div style={{ color: "var(--ink-1)", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>{v}</div>
+    </div>
+  );
+}
+
+// Module Summary card injected at the top of an expanded module in the
+// ASCEND Navigator (Foundations / Organ Systems). Mirrors the mobile
+// Module-detail summary: Phase / Year / Curricular Hours stat tiles + a
+// summary card with Full name, Short code, Director(s), # Sessions, the
+// per-type session breakdown (LEC / CCSG / LAB / SGD / PTP / ACS), and
+// # MLOs.
+function ModuleSummaryCardD({ m, pack }) {
+  const [open, setOpen] = React.useState(false);
+  function moduleTypeCode(s) {
+    const me = (s.methods || "").toLowerCase();
+    if (me.includes("lecture")) return "LEC";
+    if (me.includes("laboratory")) return "LAB";
+    if (me.includes("patient presentation")) return "PTP";
+    if (m.id === "anat" && (me.includes("discussion") || me.includes("large group"))) return "ACS";
+    if ((m.phase === "Foundations" || m.phase === "Systems") && m.id !== "anat"
+        && (me.includes("small group") || me.includes("(<12)") || me.includes("(>12)") || me.includes("discussion"))) return "CCSG";
+    if (me.includes("small group") || me.includes("(<12)") || me.includes("discussion") || me.includes("large group")) return "SGD";
+    return "Other";
+  }
+  const sessions = pack.sessions || [];
+  const mloCount = (pack.mlos || []).length;
+  const typeOrder = ["LEC", "CCSG", "LAB", "SGD", "PTP", "ACS", "Other"];
+  const typeCounts = Object.fromEntries(typeOrder.map(k => [k, 0]));
+  let totalMinutes = 0;
+  for (const s of sessions) {
+    const code = moduleTypeCode(s);
+    if (typeCounts[code] == null) typeCounts[code] = 0;
+    typeCounts[code]++;
+    totalMinutes += typeof s.duration === "number" ? s.duration : 0;
+  }
+  const totalHours = totalMinutes / 60;
+  const hoursDisplay = totalMinutes ? (Math.round(totalHours * 2) / 2) + " h" : "—";
+  const directors = (window.MODULE_DIRECTORS && window.MODULE_DIRECTORS[m.id]) || "—";
+  const phaseDisplay = m.phase === "Systems" ? "Organ Systems" : (m.phase || "—");
+  const typeRows = typeOrder.filter(k => typeCounts[k] > 0);
+
+  return (
+    <div style={{ padding: "12px 20px " + (open ? "4px" : "12px"), borderTop: "1px solid var(--grey-2)", background: "var(--paper)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 8 }}>
+        <DesktopStatTile label="Phase"            value={phaseDisplay}/>
+        <DesktopStatTile label="Year"             value={m.year || "—"}/>
+        <DesktopStatTile label="Curricular Hours" value={hoursDisplay}/>
+      </div>
+      <button onClick={() => setOpen(v => !v)}
+              style={{ background: "transparent", border: "none", padding: "6px 0", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit", color: "var(--brand-cyan-deep)", fontSize: 12, fontWeight: 600 }}>
+        <Caret open={open}/>
+        {open ? "Hide Module Summary" : "Show Module Summary"}
+      </button>
+      {open && (
+        <div style={{ background: "var(--grey-1)", borderRadius: 8, padding: "12px 16px", border: "1px solid var(--grey-2)", marginTop: 4 }}>
+          <DesktopRow k="Full name"    v={m.name || "—"}/>
+          <DesktopRow k="Short code"   v={m.short || m.id}/>
+          <DesktopRow k="Director(s)"  v={directors}/>
+          <DesktopRow k="# Sessions"   v={String(sessions.length)}/>
+          {typeRows.map((k) => (
+            <DesktopRow key={k} k={"# " + k} v={String(typeCounts[k])}/>
+          ))}
+          <DesktopRow k="# MLOs"       v={String(mloCount)} last/>
+        </div>
+      )}
+    </div>
   );
 }
 function Caret({ open }) {
@@ -39751,7 +40198,7 @@ window.VariantOCA = VariantOCA;
 const { useState: useStateApp, useEffect: useEffectApp } = React;
 
 const LENSES = [
-  { id: "D", label: "Sessions & Alignment", subtitle: "Phase → Module → Session → MLO → MEPO",
+  { id: "D", label: "ASCEND Navigator", subtitle: "Phase → Module → Session → MLO → MEPO",
     color: "var(--brand-cyan)", deep: "var(--brand-cyan-deep)", tint: "var(--brand-cyan-tint)" },
   { id: "A", label: "Module Performance",   subtitle: "Exam analytics, item review, and blueprint coverage per module",
     color: "var(--brand-magenta)", deep: "var(--brand-magenta-deep)", tint: "#FBE5F0" },
@@ -40159,6 +40606,63 @@ window.CA_DIRECTORY = [
     ],
   },
 ];
+
+// Placeholder metadata, keyed by placeholder item id. Used by the mobile
+// PlaceholderDetail and desktop placeholder detail panels to fill in the
+// standardized summary card:
+//   kind     – "clerkship" | "ai" | "activity" — drives the summary label
+//   phase    – e.g. "Phase 2", "Phase 3", "Legacy", "Transitions"
+//   year     – e.g. "M3", "M4"
+//   weeks    – integer or null
+//   directors– comma-separated names (null falls back to "—")
+//   shortCode– optional short code shown in the summary
+//   rces, sites — placeholders, left null for now
+//
+// Edit this table as data lands.
+window.PLACEHOLDER_META = {
+  // ── Phase 2 (M3) clerkships ─────────────────────────────────────────
+  "p2-im":    { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "IM-CL",   directors: "Eve Merrill, Rex Hermansen" },
+  "p2-surg":  { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "SURG-CL", directors: "Michael Chietero, Susan Lerner, Adam Korayem" },
+  "p2-peds":  { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "PEDS-CL", directors: "Deanna Chieco, Despina Tsevdos" },
+  "p2-obgyn": { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "OBGYN-CL", directors: "Katherine Chen, Cynthia Abraham" },
+  "p2-psych": { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "PSYCH-CL", directors: "Mercedes Perez-Rodriguez, Yael Kufert" },
+  "p2-neuro": { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "NEURO-CL", directors: "Matthew Swan, Andrea Lendaris" },
+  "p2-em":    { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "EM-CL",  directors: "Shefali Trivedi, Chandni Pawar" },
+  "p2-pal":   { kind: "clerkship", phase: "Phase 2", year: "M3", shortCode: "PAL-CL" },
+
+  // ── Phase 3 (M4) ───────────────────────────────────────────────────
+  "p3-ttr":   { kind: "activity",  phase: "Phase 3", year: "M4", shortCode: "TTR" },
+  "p3-ccc":   { kind: "clerkship", phase: "Phase 3", year: "M4", shortCode: "CCC" },
+  "ai-med":   { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-MED",  directors: "Eric Barna" },
+  "ai-em":    { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-EM",   directors: "Shefali Trivedi" },
+  "ai-peds":  { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-PEDS", directors: "Jan Fune" },
+  "ai-surg":  { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-SURG", directors: "Scott Nguyen" },
+  "ai-uro":     { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-URO" },
+  "ai-plastic": { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-PLA" },
+  "ai-ent":     { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-ENT" },
+  "ai-vasc":    { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-VAS" },
+  "ai-ortho":   { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-ORT" },
+  "ai-nsx":     { kind: "ai", phase: "Phase 3", year: "M4", shortCode: "AI-NSX" },
+
+  // ── Legacy curriculum ──────────────────────────────────────────────
+  "lc-amb": { kind: "clerkship", phase: "Legacy", year: "M3", shortCode: "AMB-GER", directors: "Laura Belland, Harish Jasti" },
+  "lc-em":  { kind: "clerkship", phase: "Legacy", year: "M4", shortCode: "EM-CL",   directors: "Shefali Trivedi, Chandni Pawar" },
+  "lc-ttr": { kind: "activity",  phase: "Legacy", year: "M4", shortCode: "TTR" },
+  "lc-ai-med":     { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-MED",  directors: "Eric Barna" },
+  "lc-ai-peds":    { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-PEDS", directors: "Jan Fune" },
+  "lc-ai-surg":    { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-SURG", directors: "Scott Nguyen" },
+  "lc-ai-uro":     { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-URO" },
+  "lc-ai-plastic": { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-PLA" },
+  "lc-ai-ent":     { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-ENT" },
+  "lc-ai-vasc":    { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-VAS" },
+  "lc-ai-ortho":   { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-ORT" },
+  "lc-ai-nsx":     { kind: "ai", phase: "Legacy", year: "M4", shortCode: "AI-NSX" },
+
+  // ── Transitions ────────────────────────────────────────────────────
+  "tr-bc":  { kind: "module",   phase: "Transitions", year: "M1", shortCode: "BC" },
+  "tr-tp2": { kind: "activity", phase: "Transitions", year: "M3", shortCode: "TP2" },
+  "tr-tp3": { kind: "activity", phase: "Transitions", year: "M4", shortCode: "TP3" },
+};
 })();
 
 // ──── students/mobile/mobile-app.jsx (auto-routed for narrow viewports) ────
@@ -40316,7 +40820,7 @@ function MobileTabBar({ active, onChange, savedCount }) {
     { id: "saved",     label: "Saved",    icon: IconBookmark, badge: savedCount },
   ];
   return (
-    <div style={{ background: "#fff", borderTop: "1px solid " + BRAND.grey2, paddingBottom: "max(env(safe-area-inset-bottom, 18px), 18px)" }}>
+    <div style={{ background: "#fff", borderTop: "1px solid " + BRAND.grey2, paddingBottom: "max(env(safe-area-inset-bottom, 18px), 18px)", position: "sticky", bottom: 0, zIndex: 50, flexShrink: 0, boxShadow: "0 -1px 0 " + BRAND.grey2 }}>
       <div style={{ display: "flex", padding: "8px 4px 4px" }}>
         {items.map((it) => {
           const on = it.id === active;
@@ -40892,7 +41396,7 @@ const BROWSE_HUB = [
   { id: "legacy", label: "Legacy Curriculum", sub: "Pre-triphasic clerkships & AIs",
     color: BRAND.grey11, tint: BRAND.grey1, glyph: "LC",
     items: [
-      { id: "lc-amb", label: "Ambulatory Care Clerkship",   placeholder: true },
+      { id: "lc-amb", label: "Ambulatory Care-Geriatrics Clerkship",   placeholder: true },
       { id: "lc-em",  label: "Emergency Medicine Clerkship", placeholder: true },
       { id: "lc-ttr", label: "Transition to Residency",     placeholder: true },
       { id: "lc-ai",  label: "Acting Internships",          sub: "4 specialties · tap to expand",
@@ -40917,36 +41421,36 @@ const BROWSE_HUB = [
   { id: "p2", label: "Phase 2", sub: "Core clerkships",
     color: BRAND.magenta, tint: BRAND.magentaTint, glyph: "P2",
     items: [
-      { id: "p2-im",    label: "Inpatient Medicine Clerkship",  placeholder: true },
-      { id: "p2-surg",  label: "Surgery Clerkship",             placeholder: true },
-      { id: "p2-peds",  label: "Pediatrics Clerkship",          placeholder: true },
-      { id: "p2-obgyn", label: "OB/GYN Clerkship",              placeholder: true },
-      { id: "p2-psych", label: "Psychiatry Clerkship",          placeholder: true },
-      { id: "p2-neuro", label: "Neurology Clerkship",           placeholder: true },
       { id: "p2-em",    label: "Emergency Medicine Clerkship",  placeholder: true },
+      { id: "p2-im",    label: "Inpatient Medicine Clerkship",  placeholder: true },
+      { id: "p2-neuro", label: "Neurology Clerkship",           placeholder: true },
+      { id: "p2-obgyn", label: "OB/GYN Clerkship",              placeholder: true },
       { id: "p2-pal",   label: "Palliative Care Clerkship",     placeholder: true },
+      { id: "p2-peds",  label: "Pediatrics Clerkship",          placeholder: true },
+      { id: "p2-psych", label: "Psychiatry Clerkship",          placeholder: true },
+      { id: "p2-surg",  label: "Surgery Clerkship",             placeholder: true },
     ] },
   { id: "p3", label: "Phase 3", sub: "TTR · CCC · Acting Internships",
     color: BRAND.violet, tint: BRAND.violetTint, glyph: "P3",
     items: [
-      { id: "p3-ttr", label: "Transition to Residency", placeholder: true },
-      { id: "p3-ccc", label: "Chronic Care Clerkship",  placeholder: true },
       { id: "p3-ai",  label: "Acting Internships",      sub: "5 specialties · tap to expand",
         children: [
-          { id: "ai-med",   label: "AI — Medicine",            placeholder: true },
           { id: "ai-em",    label: "AI — Emergency Medicine",  placeholder: true },
-          { id: "ai-peds",  label: "AI — Pediatrics",          placeholder: true },
           { id: "ai-surg",  label: "AI — General Surgery",     placeholder: true },
+          { id: "ai-med",   label: "AI — Medicine",            placeholder: true },
+          { id: "ai-peds",  label: "AI — Pediatrics",          placeholder: true },
           { id: "ai-sub",   label: "AI — Subspecialty",        sub: "6 subspecialties",
             children: [
-              { id: "ai-uro",     label: "AI — Urology",          placeholder: true },
-              { id: "ai-plastic", label: "AI — Plastic Surgery",  placeholder: true },
               { id: "ai-ent",     label: "AI — ENT",              placeholder: true },
-              { id: "ai-vasc",    label: "AI — Vascular Surgery", placeholder: true },
-              { id: "ai-ortho",   label: "AI — Orthopedics",      placeholder: true },
               { id: "ai-nsx",     label: "AI — Neurosurgery",     placeholder: true },
+              { id: "ai-ortho",   label: "AI — Orthopedics",      placeholder: true },
+              { id: "ai-plastic", label: "AI — Plastic Surgery",  placeholder: true },
+              { id: "ai-uro",     label: "AI — Urology",          placeholder: true },
+              { id: "ai-vasc",    label: "AI — Vascular Surgery", placeholder: true },
             ] },
         ] },
+      { id: "p3-ccc", label: "Chronic Care Clerkship",  placeholder: true },
+      { id: "p3-ttr", label: "Transition to Residency", placeholder: true },
     ] },
   { id: "long", label: "Longitudinal", sub: "POM 1–3 · THINQ",
     color: BRAND.cyanDeep, tint: BRAND.cyanTint, glyph: "L",
@@ -40960,6 +41464,30 @@ const BROWSE_HUB = [
       { id: "tr-bc",  label: "BaseCamp",                    placeholder: true },
       { id: "tr-tp2", label: "Transition to Phase 2 (TP2)", placeholder: true },
       { id: "tr-tp3", label: "Transition to Phase 3 (TP3)", placeholder: true },
+    ] },
+
+  // Cross-cutting tiles — appear at the end of the hub. Each child has a
+  // sessionsFilter that nodeChildren / tapNode resolves into a session list.
+  { id: "aocs", label: "Areas of Concentration", sub: "SSD · PCA · HDS · LPI",
+    color: BRAND.violet, tint: BRAND.violetTint, glyph: "AOC",
+    items: [
+      { id: "aoc-ssd", label: "Scientific & Scholarly Discovery (SSD)", sub: "Inquiry, research, scholarly product",        sessionsFilter: { aoc: "SSD" } },
+      { id: "aoc-pca", label: "Patient-Centered Advocacy (PCA)",        sub: "Advocacy for patients & populations",         sessionsFilter: { aoc: "PCA" } },
+      { id: "aoc-hds", label: "Healthcare Delivery Science (HDS)",      sub: "Quality, safety, systems-based practice",     sessionsFilter: { aoc: "HDS" } },
+      { id: "aoc-lpi", label: "Leadership & Professional Identity Formation (LPI)", sub: "Leadership, teaching, ethics, communication", sessionsFilter: { aoc: "LPI" } },
+    ] },
+  { id: "threads", label: "Curricular Threads", sub: "Longitudinal cross-curriculum threads",
+    color: BRAND.cyanDeep, tint: BRAND.cyanTint, glyph: "CT",
+    items: [
+      { id: "th-ethics", label: "Medical Ethics",                  sessionsFilter: { keywords: ["ethic", "bioethic"] } },
+      { id: "th-comm",   label: "Communication Skills",            sessionsFilter: { keywords: ["communicat", "interview", "interpersonal", "rapport", "feedback"] } },
+      { id: "th-nutr",   label: "Nutrition",                       sessionsFilter: { keywords: ["nutrition", "diet", "obesity", "metabolic syndrome"] } },
+      { id: "th-ai",     label: "Artificial Intelligence",         sessionsFilter: { keywords: ["artificial intelligence", "machine learning", "\\bAI\\b"] } },
+      { id: "th-pharm",  label: "Pharmacology",                    sessionsFilter: { keywords: ["pharmacolog", "pharmacokinetic", "pharmacodynamic", "pharmacotherap", "drug"] } },
+      { id: "th-physio", label: "Physiology",                      sessionsFilter: { keywords: ["physiolog"] } },
+      { id: "th-embryo", label: "Embryology",                      sessionsFilter: { keywords: ["embryolog", "embryonic", "fetal develop"] } },
+      { id: "th-micro",  label: "Microbiology",                    sessionsFilter: { keywords: ["microbiolog", "bacteri", "virus", "viral", "fungus", "pathogen", "antibiotic", "antimicrobial", "parasite"] } },
+      { id: "th-ebm",    label: "Evidence-Based Medicine (EBM)",   sessionsFilter: { keywords: ["evidence-based", "evidence based", "EBM", "biostatistic", "epidemiolog", "appraisal", "randomized", "clinical trial"] } },
     ] },
 ];
 
@@ -40996,11 +41524,40 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
   function resetNav()       { setNavPath([]); }
 
   // Build the list of child rows for a node:
+  //  - sessionsFilter → resolves to a list of matching sessions across all modules
   //  - explicit children → drilldown nodes
   //  - explicit items    → leaf list (placeholders / modules)
   //  - modulesFilter     → derived from CURRICULUM.MODULES
   function nodeChildren(node) {
     if (!node) return [];
+    if (node.sessionsFilter) {
+      const S = window.SESSIONS || {};
+      const filter = node.sessionsFilter;
+      const out = [];
+      for (const m of (C && C.MODULES) || []) {
+        const pack = S[m.id]; if (!pack) continue;
+        for (const s of (pack.sessions || [])) {
+          let match = false;
+          if (filter.aoc) {
+            match = (s.aoc || "").trim().toUpperCase() === filter.aoc;
+          } else if (filter.keywords) {
+            const hay = [s.title, s.methods, s.keywords, s.clinical, s.societal,
+                         ...(s.objectives || []).map((o) => o.text)].filter(Boolean).join(" ");
+            match = filter.keywords.some((k) => new RegExp(k, "i").test(hay));
+          }
+          if (match) {
+            out.push({
+              id: "sess:" + s.id,
+              label: s.title,
+              sub: (m.short || m.id) + (s.week ? " · Week " + s.week : "") + (s.type ? " · " + s.type : ""),
+              meta: [s.duration ? s.duration + " min" : null, s.aoc && filter.aoc ? "AOC: " + s.aoc + (s.aocSubdomain ? " · " + s.aocSubdomain : "") : null].filter(Boolean).join(" · "),
+              sessionPayload: { session: s, module: m },
+            });
+          }
+        }
+      }
+      return out;
+    }
     if (node.children) return node.children;
     if (node.items)    return node.items;
     if (node.modulesFilter && C && C.MODULES) {
@@ -41016,7 +41573,23 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
   }
 
   function tapNode(node) {
-    if (node.children) { pushNode(node); return; }
+    if (node.sessionsFilter || node.children) { pushNode(node); return; }
+    if (node.sessionPayload) {
+      // Leaf session row inside an AOC / thread list — open in shared detail
+      const sp = node.sessionPayload;
+      const moduleShort = sp.module.short || sp.module.id;
+      const slos = (sp.session.objectives && sp.session.objectives.length)
+        ? sp.session.objectives.map((o) => o.text).filter(Boolean)
+        : (sp.session.slos || []).filter(Boolean);
+      onOpenResult({
+        kind: "Session", id: sp.session.id,
+        title: sp.session.title,
+        sub: moduleShort + (sp.session.week ? " · Week " + sp.session.week : "") + (sp.session.type ? " · " + sp.session.type : ""),
+        meta: [sp.session.duration ? sp.session.duration + " min" : null, sp.session.faculty].filter(Boolean).join(" · "),
+        payload: { session: sp.session, moduleId: sp.module.id, moduleShort, slos },
+      });
+      return;
+    }
     if (node.moduleId) {
       const it = index.find((x) => x.kind === "Module" && x.id === node.moduleId);
       if (it) onOpenResult(it);
@@ -41027,6 +41600,7 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
         label: node.label,
         breadcrumb: [...navPath.map((n) => n.label), node.label],
         color: navPath[0] && navPath[0].color,
+        item: node,
       });
     }
   }
@@ -41039,7 +41613,7 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
       <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
         <div style={{ padding: "10px 16px 12px", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
-          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Curriculum</div>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>ASCEND Curriculum</div>
         </div>
         <div style={{ padding: "0 14px" }}>
           <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
@@ -41060,7 +41634,7 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
         <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px 16px" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: "32px 22px", textAlign: "center", color: BRAND.grey11, marginTop: 14 }}>
             <div style={{ display: "grid", placeItems: "center", marginBottom: 10, color: BRAND.grey3 }}><IconBook size={36} stroke={BRAND.grey3} sw={1.5}/></div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: BRAND.ink, marginBottom: 4 }}>Curriculum not loaded</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: BRAND.ink, marginBottom: 4 }}>ASCEND Curriculum not loaded</div>
             <div style={{ fontSize: 13 }}>The session map data isn't available in this build.</div>
           </div>
         </div>
@@ -41078,7 +41652,7 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
 function BrowseHub({ onOpenTile }) {
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px 18px", WebkitOverflowScrolling: "touch" }}>
-      <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, padding: "0 4px 10px" }}>Browse the curriculum</div>
+      <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, padding: "0 4px 10px" }}>Browse the ASCEND curriculum</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {BROWSE_HUB.map((tile) => (
           <button key={tile.id} onClick={() => onOpenTile(tile)}
@@ -41142,7 +41716,13 @@ function BrowseItemRow({ item, onTap }) {
   const isPlaceholder = !!item.placeholder;
   const hasChildren  = !!item.children;
   const isModule     = !!item.moduleId;
-  const stripe = isModule ? BRAND.cyan : hasChildren ? BRAND.violet : BRAND.grey3;
+  const isSession    = !!item.sessionPayload;
+  const drillSession = !!item.sessionsFilter;
+  let stripe = BRAND.grey3;
+  if (isModule)        stripe = BRAND.cyan;
+  else if (drillSession) stripe = BRAND.violet;
+  else if (isSession)    stripe = BRAND.cyanDeep;
+  else if (hasChildren)  stripe = BRAND.violet;
   return (
     <button onClick={onTap}
       style={{ background: "#fff", border: "none", borderRadius: 12, padding: 0, display: "flex", alignItems: "stretch", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03)", WebkitTapHighlightColor: "rgba(0,0,0,0.06)", overflow: "hidden", fontFamily: "inherit", width: "100%" }}>
@@ -41346,6 +41926,7 @@ function SessionDetailBody({ item }) {
   );
 }
 function ModuleDetailBody({ item, onOpenItem }) {
+  const [summaryOpen, setSummaryOpen] = useStateMA(false);
   const m = item.payload && item.payload.module;
   if (!m) return null;
   const S = window.SESSIONS || {};
@@ -41413,17 +41994,24 @@ function ModuleDetailBody({ item, onOpenItem }) {
         <StatTile label="Year"             value={m.year  || "—"}/>
         <StatTile label="Curricular Hours" value={hoursDisplay}/>
       </div>
-      <InfoBlock label="Module summary">
-        <Row k="Full name"  v={m.name || "—"}/>
-        <Row k="Short code" v={moduleShort}/>
-        <Row k="Director(s)" v={directors || "—"} accent={directors ? null : null}/>
-        <Row k="# Sessions"  v={String(sessionCount)}/>
-        {/* Per-type session breakdown — only show types that occur in this module */}
-        {typeOrder.filter((k) => typeCounts[k] > 0).map((k) => (
-          <Row key={k} k={"# " + k} v={String(typeCounts[k])}/>
-        ))}
-        <Row k="# MLOs"      v={String(mloCount)}/>
-      </InfoBlock>
+      <button onClick={() => setSummaryOpen((v) => !v)}
+              style={{ background: "transparent", border: "none", padding: "8px 4px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", color: BRAND.cyanDeep, fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
+        {summaryOpen ? <IconChevD size={14} stroke={BRAND.cyanDeep} sw={2.4}/> : <IconChevR size={14} stroke={BRAND.cyanDeep} sw={2.4}/>}
+        {summaryOpen ? "Hide Module Summary" : "Show Module Summary"}
+      </button>
+      {summaryOpen && (
+        <InfoBlock label="Module summary">
+          <Row k="Full name"  v={m.name || "—"}/>
+          <Row k="Short code" v={moduleShort}/>
+          <Row k="Director(s)" v={directors || "—"} accent={directors ? null : null}/>
+          <Row k="# Sessions"  v={String(sessionCount)}/>
+          {/* Per-type session breakdown — only show types that occur in this module */}
+          {typeOrder.filter((k) => typeCounts[k] > 0).map((k) => (
+            <Row key={k} k={"# " + k} v={String(typeCounts[k])}/>
+          ))}
+          <Row k="# MLOs"      v={String(mloCount)}/>
+        </InfoBlock>
+      )}
       {sessions.length > 0 ? (
         <InfoBlock label={"Sessions · " + sessions.length}>
           <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
@@ -41558,36 +42146,14 @@ function MepoListTab({ onOpenMepo }) {
       <div style={{ background: BRAND.violet, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 18 }}>
         <div style={{ padding: "10px 16px 4px", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
-          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Curricular Affairs · MEPOs</div>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>MEPOs · Curricular Leadership</div>
         </div>
         <div style={{ padding: "0 16px", fontSize: 13, opacity: 0.9, marginTop: 4 }}>
-          OCA leadership · {mepos.length} canonical MEPOs
+          {mepos.length} canonical MEPOs · {leadership.length} leadership
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 18px", WebkitOverflowScrolling: "touch" }}>
-        {/* Office of Curricular Affairs Leadership */}
-        {leadership.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px" }}>
-              Office of Curricular Affairs Leadership
-            </div>
-            <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-              {leadership.map((p, i) => (
-                <div key={p.name} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 999, background: BRAND.violetTint, color: BRAND.violet, display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, flexShrink: 0, letterSpacing: 0.4 }}>
-                    {initials(p.name)}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: BRAND.ink, lineHeight: 1.3 }}>{p.name}</div>
-                    <div style={{ fontSize: 12.5, color: BRAND.ink2, marginTop: 2, lineHeight: 1.4 }}>{p.role}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 23 canonical MEPOs */}
+        {/* 23 canonical MEPOs — listed first */}
         <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px" }}>
           Medical Education Program Objectives
         </div>
@@ -41596,7 +42162,7 @@ function MepoListTab({ onOpenMepo }) {
             MEPOs not loaded.
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
             {groups.map((g) => (
               <div key={g.domain}>
                 <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px" }}>
@@ -41616,6 +42182,28 @@ function MepoListTab({ onOpenMepo }) {
             ))}
           </div>
         )}
+
+        {/* Curricular Leadership — listed second */}
+        {leadership.length > 0 && (
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px" }}>
+              Curricular Leadership
+            </div>
+            <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+              {leadership.map((p, i) => (
+                <div key={p.name} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 999, background: BRAND.violetTint, color: BRAND.violet, display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, flexShrink: 0, letterSpacing: 0.4 }}>
+                    {initials(p.name)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: BRAND.ink, lineHeight: 1.3 }}>{p.name}</div>
+                    <div style={{ fontSize: 12.5, color: BRAND.ink2, marginTop: 2, lineHeight: 1.4 }}>{p.role}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -41624,11 +42212,32 @@ function MepoListTab({ onOpenMepo }) {
 // ─── Placeholder detail ───────────────────────────────────────
 // Generic detail screen for browse-hub items whose curriculum data hasn't
 // been ingested yet (clerkships, AIs, transitions). Surfaces the breadcrumb
-// so the user knows where they came from.
+// so the user knows where they came from, plus a standardized summary card
+// matching the Phase 1 module-detail layout: Phase / Year / Curricular Hours
+// stat tiles + a per-kind summary (Clerkship / Acting Internship / Activity).
 function PlaceholderDetail({ data, onBack }) {
+  const [summaryOpen, setSummaryOpen] = useStateMA(false);
   const sans = "'Inter Tight', system-ui, sans-serif";
   const crumb = (data.breadcrumb || []).slice(0, -1).join(" · ");
-  const accent = data.color || BRAND.violet;
+  const meta = (data.item && data.item.id && window.PLACEHOLDER_META && window.PLACEHOLDER_META[data.item.id]) || {};
+  const kind = meta.kind || "activity";
+  const accent = data.color || (kind === "ai" ? BRAND.violet : kind === "clerkship" ? BRAND.magenta : BRAND.cyanDeep);
+  const summaryLabel =
+    kind === "ai"        ? "Acting Internship Summary" :
+    kind === "clerkship" ? "Clerkship Summary" :
+    kind === "module"    ? "Module Summary" :
+                           "Activity Summary";
+  const kindEyebrow =
+    kind === "ai"        ? "Acting Internship" :
+    kind === "clerkship" ? "Clerkship" :
+    kind === "module"    ? "Module" :
+                           "Activity";
+  const showSites  = kind === "ai" || kind === "clerkship";
+  const phaseLabel = meta.phase || "—";
+  const yearLabel  = meta.year || "—";
+  const weeksLabel = meta.weeks ? meta.weeks + " wk" : "—";
+  const directors  = meta.directors || "—";
+  const shortCode  = meta.shortCode || "—";
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
       <div style={{ background: accent, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)" }}>
@@ -41636,7 +42245,9 @@ function PlaceholderDetail({ data, onBack }) {
           <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.18)", border: "none", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
             <IconBack size={20} stroke="#fff" sw={2.2}/>
           </button>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", opacity: 0.85 }}>Placeholder</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase", opacity: 0.85 }}>
+            {kindEyebrow}
+          </div>
           <div style={{ width: 36 }}/>
         </div>
         <div style={{ padding: "0 18px 22px" }}>
@@ -41645,12 +42256,32 @@ function PlaceholderDetail({ data, onBack }) {
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px 18px", marginTop: -14, background: BRAND.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, WebkitOverflowScrolling: "touch" }}>
-        <div style={{ background: "#fff", borderRadius: 12, padding: "18px 18px", marginBottom: 10 }}>
-          <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700, marginBottom: 8 }}>Status</div>
-          <div style={{ fontSize: 14, color: BRAND.ink, fontWeight: 600, marginBottom: 6 }}>Awaiting curriculum map</div>
-          <div style={{ fontSize: 13, color: BRAND.ink2, lineHeight: 1.55 }}>
-            This section is a placeholder in the dashboard. Once the module map for {data.label} is ingested, you'll be able to drill into its sessions, MLOs, and MEPO alignment from here.
-          </div>
+        {/* Stat tiles: Phase / Year / Curricular Weeks */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+          <StatTile label="Phase"            value={phaseLabel}/>
+          <StatTile label="Year"             value={yearLabel}/>
+          <StatTile label="Curricular Weeks" value={weeksLabel}/>
+        </div>
+
+        {/* Collapsible summary */}
+        <button onClick={() => setSummaryOpen((v) => !v)}
+                style={{ background: "transparent", border: "none", padding: "8px 4px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", color: BRAND.cyanDeep, fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
+          {summaryOpen ? <IconChevD size={14} stroke={BRAND.cyanDeep} sw={2.4}/> : <IconChevR size={14} stroke={BRAND.cyanDeep} sw={2.4}/>}
+          {summaryOpen ? "Hide " + summaryLabel : "Show " + summaryLabel}
+        </button>
+        {summaryOpen && (
+          <InfoBlock label={summaryLabel}>
+            <Row k="Full name"    v={data.label}/>
+            <Row k="Short code"   v={shortCode}/>
+            <Row k="Director(s)"  v={directors}/>
+            {showSites && <Row k="# RCEs"         v="—"/>}
+            {showSites && <Row k="Clinical sites" v="—"/>}
+          </InfoBlock>
+        )}
+
+        <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", fontSize: 12, color: BRAND.grey11, lineHeight: 1.5 }}>
+          <span style={{ color: BRAND.ink2, fontWeight: 600 }}>Awaiting curriculum map.</span>{" "}
+          Sessions, MLOs, and MEPO alignment for {data.label} will appear here once ingested.
         </div>
       </div>
     </div>
