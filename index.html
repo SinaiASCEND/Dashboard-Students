@@ -40820,7 +40820,7 @@ function MobileTabBar({ active, onChange, savedCount }) {
     { id: "saved",     label: "Saved",    icon: IconBookmark, badge: savedCount },
   ];
   return (
-    <div style={{ background: "#fff", borderTop: "1px solid " + BRAND.grey2, paddingBottom: "max(env(safe-area-inset-bottom, 18px), 18px)", position: "sticky", bottom: 0, zIndex: 50, flexShrink: 0, boxShadow: "0 -1px 0 " + BRAND.grey2 }}>
+    <div style={{ background: "#fff", borderTop: "1px solid " + BRAND.grey2, paddingBottom: "max(env(safe-area-inset-bottom, 18px), 18px)", position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 50, boxShadow: "0 -1px 0 " + BRAND.grey2 }}>
       <div style={{ display: "flex", padding: "8px 4px 4px" }}>
         {items.map((it) => {
           const on = it.id === active;
@@ -42389,8 +42389,10 @@ function MobileApp() {
   }
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: BRAND.bg, overflow: "hidden" }}>
-      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{body}</div>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: BRAND.bg, overflow: "hidden", position: "relative" }}>
+      <div style={{ position: "absolute", inset: 0, paddingBottom: "calc(env(safe-area-inset-bottom, 18px) + 56px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, minHeight: 0, position: "relative", display: "flex", flexDirection: "column" }}>{body}</div>
+      </div>
       <MobileTabBar active={tab} onChange={switchTab} savedCount={savedSet.size}/>
       <FilterSheet open={filtersOpen} onClose={() => setFiltersOpen(false)}/>
     </div>
