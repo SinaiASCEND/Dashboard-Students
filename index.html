@@ -40,6 +40,10 @@
   --bad: #B82B1E;
   --bad-tint: #FAE5E2;
 
+  /* Session-title accent — deep navy to differentiate from black tag/metadata text */
+  --session-title: #0B3B7A;
+  --session-title-deep: #082C5C;
+
   /* Type */
   --serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
   --sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -255,6 +259,9 @@ hr.sep { border: 0; border-top: 1px solid var(--grey-3); margin: 16px 0; }
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="canonical-threads.js"></script>
+<script src="canonical-aocs.js"></script>
+<script src="jama-nutr-competencies.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -32298,8 +32305,9 @@ window.SESSIONS = (function() {
           faculty: null, // not in canonical map
           title: s.name,
           objectives,
-          // verbatim instructional methods string from the spreadsheet
-          methods: s.methods || "",
+          // verbatim instructional methods string from the spreadsheet,
+          // with each method token capitalised for display (lecture → Lecture)
+          methods: (s.methods || "").split(/(\s*[;,]\s*)/).map((part) => /^[\s;,]*$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1)).join(""),
           // pass-through richer fields (used by detail views if present)
           mepoOrigText: s.mepoOrigText,
           mepos: s.mepos,
@@ -32348,6 +32356,97 @@ window.SESSIONS = (function() {
   }
 
   return out;
+})();
+
+// ============================================================================
+// Inject canonical AOC + Thread sessions into window.SESSIONS
+// ----------------------------------------------------------------------------
+// The Phase 1 master curriculum map carries audit lists (AOC-HDS, AOC-SSD,
+// AOC-LPI, THREAD-*) whose Phase 1 entries should appear directly in each
+// module's session list — not as a separate "audit roster". This pass walks
+// the canonical lists, finds-or-creates a session record on the live module,
+// and tags it with `.aoc` / `.aocSubdomain` and a `.threads` array. Modules
+// that don't yet have a session pack (e.g. BaseCamp) get an empty pack
+// scaffolded so their canonical sessions can be displayed.
+// ============================================================================
+(function injectCanonicalIntoSessions() {
+  const C = window.CURRICULUM;
+  const S = window.SESSIONS;
+  if (!C || !S) return;
+
+  // 1. Scaffold a BaseCamp module so canonical BaseCamp entries can land.
+  if (!C.MODULES.find(m => m.id === "basecamp")) {
+    C.MODULES.push({
+      id: "basecamp", name: "BaseCamp", short: "BaseCamp",
+      year: "M1", phase: "Transitions", weeks: 1, cohort: 142, mloCount: 0,
+    });
+  }
+  if (!S.basecamp) S.basecamp = { sessions: [], mlos: [], pack: null };
+
+  function ensureSession(modId, n, name, opts = {}) {
+    if (!modId) return null;
+    if (!S[modId]) S[modId] = { sessions: [], mlos: [], pack: null };
+    const pack = S[modId];
+    // Try to find by session number first; fall back to title match.
+    let existing = null;
+    if (Number.isFinite(n)) existing = (pack.sessions || []).find(s => s.n === n);
+    if (!existing) existing = (pack.sessions || []).find(s =>
+      (s.title || "").trim().toLowerCase() === (name || "").trim().toLowerCase());
+    if (existing) return existing;
+    // Create a new synthetic session.
+    const synthN = Number.isFinite(n) ? n : ((pack.sessions || []).reduce((m, s) => Math.max(m, s.n || 0), 0) + 1);
+    const fresh = {
+      id: `${modId}-s${synthN}`,
+      n: synthN,
+      title: name,
+      week: opts.week ?? Math.max(1, Math.ceil(synthN / 5)),
+      day: ["Mon", "Tue", "Wed", "Thu", "Fri"][((synthN - 1) % 5)],
+      date: null,
+      type: opts.type || "Other",
+      methods: opts.methods || "",
+      duration: opts.duration || 60,
+      objectives: opts.objectives || [],
+      keywords: "",
+      clinical: "",
+      societal: "",
+      mlos: [],
+      mepo: [],
+      aoc: null,
+      aocSubdomain: "",
+      threads: [],
+      placeholder: true,
+    };
+    pack.sessions.push(fresh);
+    return fresh;
+  }
+
+  // 2. AOC injection — for each canonical AOC entry with a modId, ensure the
+  // session exists and stamp `.aoc` / `.aocSubdomain` on it. SLO from the audit
+  // sheet becomes the session's first objective when nothing is set yet.
+  for (const aocPack of (window.CANONICAL_AOCS || [])) {
+    for (const e of (aocPack.sessions || [])) {
+      if (!e.modId) continue;
+      const s = ensureSession(e.modId, e.n, e.name, {
+        objectives: e.slo ? [{ slo: e.slo, mlos: [] }] : [],
+      });
+      if (!s) continue;
+      // Tag with AOC code if not already set, or upgrade if previously blank
+      if (!s.aoc) s.aoc = aocPack.code;
+      if (!s.aocSubdomain && e.sub) s.aocSubdomain = e.sub;
+    }
+  }
+
+  // 3. Thread injection — ensure each canonical thread session exists in the
+  // live module pack and tag it with the thread id.
+  for (const threadPack of (window.CANONICAL_THREADS || [])) {
+    for (const e of (threadPack.sessions || [])) {
+      if (!e.modId) continue;
+      const s = ensureSession(e.modId, e.n, e.name);
+      if (!s) continue;
+      if (!Array.isArray(s.threads)) s.threads = [];
+      if (!s.threads.includes(threadPack.id)) s.threads.push(threadPack.id);
+    }
+  }
 })();
 
 })();
@@ -35770,12 +35869,10 @@ function GlobalSearch({ open, onClose }) {
               activeIdx={activeIdx}
               setActiveIdx={setActiveIdx}
               onPick={(r) => {
-                // From typeahead, picking a session jumps to results page focused on it
-                // is too noisy — instead, sessions open the detail panel; everything
-                // else navigates as before.
+                // Sessions slide open in a right-side panel (kept in the
+                // typeahead view so the modal doesn't widen unexpectedly);
+                // everything else navigates as before.
                 if (r.kind === "Session") {
-                  setCommittedQ(q || r.title);
-                  setView("results");
                   setDetailSession(r);
                 } else {
                   r.open?.();
@@ -35793,24 +35890,40 @@ function GlobalSearch({ open, onClose }) {
               onOpen={openItem}
             />
           )}
-
-          {detailSession && (
-            <SessionDetailOverlay
-              item={detailSession}
-              onClose={() => setDetailSession(null)}
-              onOpenInTrace={() => {
-                detailSession.session && window.APP_NAV?.openTrace({
-                  moduleId: detailSession.moduleId,
-                  sessionId: detailSession.session.id,
-                });
-                onClose();
-              }}
-            />
-          )}
         </div>
 
         <SearchFooter view={view} resultsCount={view === "typeahead" ? liveResults.length : pageResults.length} />
       </div>
+
+      {/* Right-side session detail drawer — sibling of the modal, pinned
+          to the viewport right edge so the search dialog never widens or
+          gets covered by the detail view. */}
+      {detailSession && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "fixed", top: 0, right: 0, bottom: 0,
+            width: "min(560px, 95vw)",
+            background: "var(--paper)", borderLeft: "1px solid var(--grey-3)",
+            boxShadow: "-12px 0 32px rgba(15,23,42,0.18)",
+            zIndex: 9101, display: "flex", flexDirection: "column",
+            animation: "gs-drawer-in 200ms cubic-bezier(.2,.7,.2,1)",
+          }}
+        >
+          <style>{`@keyframes gs-drawer-in { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+          <SessionDetailOverlay
+            item={detailSession}
+            onClose={() => setDetailSession(null)}
+            onOpenInTrace={() => {
+              detailSession.session && window.APP_NAV?.openTrace({
+                moduleId: detailSession.moduleId,
+                sessionId: detailSession.session.id,
+              });
+              onClose();
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -35821,20 +35934,7 @@ function GlobalSearch({ open, onClose }) {
 
 function runSearch(index, q, forResultsPage) {
   const tokens = tokenize(q);
-  if (tokens.length === 0) {
-    if (forResultsPage) return [];
-    // Default suggestions for empty query (typeahead only)
-    const out = [];
-    const seen = { Session: 0, Module: 0, MEPO: 0, MLO: 0 };
-    for (const item of index) {
-      if (seen[item.kind] !== undefined && seen[item.kind] < 4) {
-        out.push({ ...item, score: 0 });
-        seen[item.kind]++;
-      }
-      if (out.length > 16) break;
-    }
-    return out;
-  }
+  if (tokens.length === 0) return [];
   const scored = [];
   for (const item of index) {
     const s = scoreItem(item, tokens);
@@ -36268,7 +36368,7 @@ function SessionResultCard({ item, rank, onOpen }) {
             <span style={{ fontSize: 11, color: "var(--grey-11)" }}>· {item.slos.length} SLO{item.slos.length === 1 ? "" : "s"}</span>
           ) : null}
         </div>
-        <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink-1)", lineHeight: 1.35, marginBottom: 4 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--session-title)", lineHeight: 1.35, marginBottom: 4 }}>
           {s.title}
         </div>
         {s.methods && (
@@ -36348,7 +36448,7 @@ function SessionDetailOverlay({ item, onClose, onOpenInTrace }) {
           <div style={{ fontSize: 11, color: "var(--grey-11)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
             {item.moduleShort} — {item.moduleName}{s.week ? " · Week " + s.week : ""}
           </div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--ink-1)", marginTop: 4, lineHeight: 1.25, fontFamily: "var(--font-serif, var(--font-sans))" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--session-title-deep)", marginTop: 4, lineHeight: 1.25, fontFamily: "var(--font-serif, var(--font-sans))" }}>
             {s.title}
           </div>
         </div>
@@ -36509,7 +36609,7 @@ function VariantA() {
   const C = window.CURRICULUM;
   const mod = C.MODULES.find(m => m.id === moduleId);
   const crumbs = view === "overview"
-    ? ["ASCEND Curriculum", "All Modules · 2025"]
+    ? ["ASCEND Curriculum", "All Modules"]
     : view === "module" ? ["ASCEND Curriculum", mod.name]
     : view === "mlo" ? ["ASCEND Curriculum", mod.name, "MLO Coverage"]
     : view === "mepo" ? ["ASCEND Curriculum", "MEPO Map"]
@@ -36567,7 +36667,7 @@ function SideNavA({ view, setView, moduleId, setModuleId }) {
                 onClick={() => { setModuleId(m.id); setView("module"); }}>
                 <PhaseDot phase={m.phase} />
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.short}</span>
-                {m.real && <span className="badge" style={{ background: "var(--brand-cyan-tint)", color: "var(--brand-cyan-deep)" }}>2025</span>}
+                {m.real && <span className="badge" style={{ background: "var(--brand-cyan-tint)", color: "var(--brand-cyan-deep)" }}>Live</span>}
               </div>
             ))}
           </div>
@@ -36606,13 +36706,10 @@ function OverviewA({ setView, setModuleId }) {
         <div>
           <h2 className="t-serif">Curriculum Overview</h2>
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-            Cohort 2025 · 18 modules · {overall.items.toLocaleString()} assessed items
+            18 modules · {overall.items.toLocaleString()} assessed items
           </div>
         </div>
         <div className="row">
-          <select className="btn" defaultValue="2025">
-            <option>2025</option><option>2024</option><option>2023</option>
-          </select>
           <button className="btn">Filter</button>
         </div>
       </div>
@@ -36622,7 +36719,7 @@ function OverviewA({ setView, setModuleId }) {
           <div className="kpi">
             <div className="kpi-label">Curriculum Mean</div>
             <div className="kpi-value t-num">{(overall.mean * 100).toFixed(1)}<span className="unit">%</span></div>
-            <div className="kpi-delta good">▲ 1.2 pt vs 2024–2025</div>
+            <div className="kpi-delta good">▲ 1.2 pt vs prior cycle</div>
           </div>
         </div>
         <div className="card" style={{ gridColumn: "span 3" }}>
@@ -36643,7 +36740,7 @@ function OverviewA({ setView, setModuleId }) {
           <div className="kpi">
             <div className="kpi-label">Reports Available</div>
             <div className="kpi-value t-num">{1 + (window.CURRICULUM.REAL ? Object.keys(window.CURRICULUM.REAL).length : 0)}<span className="unit">/18</span></div>
-            <div className="kpi-delta">Anatomy 2025{window.CURRICULUM.REAL && Object.keys(window.CURRICULUM.REAL).length ? ` · +${Object.keys(window.CURRICULUM.REAL).length} ingested` : " · others pending"}</div>
+            <div className="kpi-delta">Anatomy{window.CURRICULUM.REAL && Object.keys(window.CURRICULUM.REAL).length ? ` · +${Object.keys(window.CURRICULUM.REAL).length} ingested` : " · others pending"}</div>
           </div>
         </div>
       </div>
@@ -36683,7 +36780,7 @@ function OverviewA({ setView, setModuleId }) {
                 <td>
                   <div style={{ fontWeight: 600 }}>{m.name}</div>
                   <div style={{ fontSize: 11, color: "var(--grey-7)" }}>
-                    {m.real ? <span className="pill cyan" style={{ marginRight: 6 }}>2025</span>
+                    {m.real ? <span className="pill cyan" style={{ marginRight: 6 }}>Live</span>
                             : <span className="synth-mark">synthesized</span>} · {m.weeks}w · n={m.cohort}
                   </div>
                 </td>
@@ -37305,7 +37402,7 @@ function ExportA() {
             lineHeight: 1.5,
           }}>
             <div style={{ borderBottom: "2px solid var(--brand-cyan)", paddingBottom: 8, marginBottom: 12 }}>
-              <div style={{ fontSize: 9, letterSpacing: 0.16, textTransform: "uppercase", color: "var(--brand-cyan-deep)" }}>Curriculum Office · 2025</div>
+              <div style={{ fontSize: 9, letterSpacing: 0.16, textTransform: "uppercase", color: "var(--brand-cyan-deep)" }}>Curriculum Office</div>
               <div style={{ fontSize: 18, fontWeight: 600, marginTop: 4 }}>Annual Curriculum Report</div>
             </div>
             <div style={{ fontWeight: 600, fontSize: 12 }}>Executive Summary</div>
@@ -37490,7 +37587,7 @@ function OutcomesHomeB({ setView, setMepoCode }) {
           <div className="t-eyebrow">Program Objectives (MEPOs)</div>
           <h2 className="t-serif" style={{ marginTop: 6, marginBottom: 0 }}>Where does the curriculum provide evidence for each objective?</h2>
           <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-            Cohort 2025 · {C.MEPOS.length} program objectives · {C.MODULES.length} modules · {totalSessions.toLocaleString()} session→MEPO assignments
+            {C.MEPOS.length} program objectives · {C.MODULES.length} modules · {totalSessions.toLocaleString()} session→MEPO assignments
           </div>
         </div>
         <div className="row" style={{ gap: 6 }}>
@@ -37876,7 +37973,7 @@ function OutcomeModuleViewB({ mepo, mod }) {
                 <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 4 }}>
                   <span style={{ width: 38, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em" }}>WK {s.week}</span>
                   <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
-                  <span style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>{s.title}</span>
+                  <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</span>
                   <button onClick={() => window.APP_NAV?.openTrace({ moduleId: mod.id, sessionId: s.id })}
                     style={{ background: "none", border: "1px solid var(--grey-3)", borderRadius: 4, padding: "2px 8px", fontSize: 10.5, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600 }}>
                     Trace ↗
@@ -37947,7 +38044,7 @@ function OutcomeModuleViewB({ mepo, mod }) {
                     <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 4 }}>
                       <span style={{ width: 38, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em" }}>WK {s.week}</span>
                       <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
-                      <span style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>{s.title}</span>
+                      <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</span>
                       <button onClick={() => window.APP_NAV?.openTrace({ moduleId: mod.id, sessionId: s.id })}
                         style={{ background: "none", border: "1px solid var(--grey-3)", borderRadius: 4, padding: "2px 8px", fontSize: 10.5, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600 }}>
                         Trace ↗
@@ -38362,9 +38459,8 @@ const BROWSE_TREE = [
 
   { kind: "section-header", label: "ASCEND Phases" },
 
-  { kind: "group-header", label: "Phase 1" },
-  { kind: "leaf", id: "p1-found", label: "Foundations",    indent: 1, modulesFilter: m => m.phase === "Foundations" },
-  { kind: "leaf", id: "p1-organ", label: "Organ Systems",  indent: 1, modulesFilter: m => m.phase === "Systems" },
+  { kind: "leaf", id: "p1", label: "Phase 1", sub: "Foundations · Organ Systems",
+    modulesFilter: m => m.phase === "Foundations" || m.phase === "Systems" },
 
   { kind: "leaf", id: "p2", label: "Phase 2", sub: "Core clerkships",
     items: [
@@ -38400,8 +38496,10 @@ const BROWSE_TREE = [
       { id: "p3-ttr", label: "Transition to Residency", placeholder: true },
     ] },
 
-  { kind: "leaf", id: "long",  label: "Longitudinal", sub: "POM 1–3 · THINQ", modulesFilter: m => m.phase === "Longitudinal" },
-  { kind: "leaf", id: "caps",  label: "Capstones",    sub: "PEAKS",          modulesFilter: m => m.phase === "Capstone" },
+  { kind: "leaf", id: "long",  label: "Longitudinal", sub: "POM 1–3 · THINQ",
+    modulesFilter: m => m.phase === "Longitudinal" },
+  { kind: "leaf", id: "caps",  label: "Capstones",    sub: "PEAKS",
+    modulesFilter: m => m.phase === "Capstone" },
   { kind: "leaf", id: "trans", label: "Transitions",  sub: "BaseCamp · TP2 · TP3",
     items: [
       { id: "tr-bc",  label: "BaseCamp",                    placeholder: true },
@@ -38437,7 +38535,7 @@ function VariantD() {
         if (node.kind === "leaf" && node.modulesFilter && node.modulesFilter(m)) return node.id;
       }
     }
-    return "p1-found";
+    return "p1";
   }
 
   const [leafId, setLeafId] = useStateD(initialLeafId());
@@ -38502,7 +38600,20 @@ function VariantD() {
   }, [session, hoveredObjIdx, sessionPack]);
 
   const showRightRail = !!(leaf && leaf.modulesFilter);
-  const crumbs = ["ASCEND Curriculum", leaf && leaf.label, activeMod?.short, session?.title].filter(Boolean);
+  // Walk back through BROWSE_TREE from the current leaf to find its closest
+  // group-header (e.g. "Phase 1"). Used to prefix breadcrumbs + section head
+  // so students always see the phase context for Foundations / Organ Systems.
+  function leafGroupLabel(leafObj) {
+    if (!leafObj) return null;
+    const idx = BROWSE_TREE.findIndex(n => n.kind === "leaf" && n.id === leafObj.id);
+    for (let i = idx - 1; i >= 0; i--) {
+      if (BROWSE_TREE[i].kind === "group-header") return BROWSE_TREE[i].label;
+    }
+    return null;
+  }
+  const leafGroup = leafGroupLabel(leaf);
+  const leafCrumb = leaf ? (leafGroup ? `${leafGroup} · ${leaf.label}` : leaf.label) : null;
+  const crumbs = ["ASCEND Curriculum", leafCrumb, activeMod?.short, session?.title].filter(Boolean);
   const screenLabel = leaf ? "D · " + (leaf.id) + (session ? " · " + session.id : "") : "D";
 
   function selectLeaf(id) {
@@ -38530,6 +38641,14 @@ function VariantD() {
     setOpenSession(sessionId);
     setFocusedMepo(null);
   }
+
+  // Expose navigateToSession so the Related-Sessions compare drawer (loaded
+  // from related-sessions.jsx) can let users jump to a related session in
+  // any module without prop-drilling through SessionList → SessionObjectives.
+  React.useEffect(() => {
+    window.__navigateToSession = navigateToSession;
+    return () => { if (window.__navigateToSession === navigateToSession) delete window.__navigateToSession; };
+  });
 
   // ── Sidebar renderer ──────────────────────────────────────────────
   function renderSidebar() {
@@ -38583,7 +38702,10 @@ function VariantD() {
       <>
         <div className="section-head">
           <div>
-            <div className="t-eyebrow">{leaf.label}</div>
+            <div className="t-eyebrow">
+              {leafGroup ? <><span style={{ color: "var(--grey-11)" }}>{leafGroup}</span><span style={{ color: "var(--grey-7)", margin: "0 6px" }}>·</span></> : null}
+              {leaf.label}
+            </div>
             {leaf.sub && <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{leaf.sub}</div>}
           </div>
           <div className="row" style={{ gap: 6, position: "relative" }}>
@@ -38688,7 +38810,7 @@ function VariantD() {
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 2 }}>
                       {m.year} · {pack ? pack.sessions.length + " sessions" : "session list pending"} · {m.mloCount} MLOs
-                      {m.real && <span className="pill cyan" style={{ marginLeft: 8 }}>2025</span>}
+                      {m.real && <span className="pill cyan" style={{ marginLeft: 8 }}>Live</span>}
                     </div>
                   </div>
                   <Pill kind="muted">n={m.cohort}</Pill>
@@ -38911,7 +39033,7 @@ function SessionSidePanel({ session, mod, onClose }) {
                 aria-label="Close session panel"
                 style={{ background: "transparent", border: "none", padding: 0, fontSize: 18, lineHeight: 1, color: "var(--grey-11)", cursor: "pointer" }}>×</button>
       </div>
-      <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.35, marginBottom: 4 }}>{session.title}</div>
+      <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.35, marginBottom: 4, color: "var(--session-title)" }}>{session.title}</div>
       <div style={{ fontSize: 11, color: "var(--grey-11)", marginBottom: 12 }}>
         {mod?.name}{session.week ? " · Week " + session.week : ""} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
         {session.duration ? " · " + session.duration + " min" : ""}
@@ -38960,6 +39082,41 @@ function SessionSidePanel({ session, mod, onClose }) {
           {!alignment.mepos.length && <div className="muted" style={{ fontSize: 11 }}>No MEPOs aligned.</div>}
         </div>
       </div>
+
+      {/* JAMA Nutrition Competencies — joined via window.jamaForSession,
+          appears only when this session is tagged on the THREAD-NUTR sheet.
+          Shows the full Eisenberg et al. 2024 statement. */}
+      {(() => {
+        if (!mod || typeof window.jamaForSession !== "function") return null;
+        const jamas = window.jamaForSession(mod.id, session.n);
+        if (!jamas || !jamas.length) return null;
+        const theme = (typeof window.jamaThemeForSession === "function")
+          ? window.jamaThemeForSession(mod.id, session.n) : "";
+        return (
+          <div style={{ marginTop: 16 }}>
+            <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+              <div style={{ fontWeight: 600, fontSize: 12 }}>JAMA Nutrition Competencies</div>
+              <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{jamas.length}</div>
+            </div>
+            <div style={{ fontSize: 10.5, color: "var(--grey-11)", marginBottom: 6, fontStyle: "italic" }}>
+              Eisenberg et al. 2024{theme ? ` \u00b7 ${theme}` : ""}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {jamas.map((c) => (
+                <div key={c.n} style={{ borderLeft: "2px solid var(--brand-cyan)", paddingLeft: 10 }}>
+                  <div className="row" style={{ gap: 6, alignItems: "baseline" }}>
+                    <span className="pill cyan" style={{ fontSize: 10 }}>JAMA #{c.n}{c.priority ? " \u2605" : ""}</span>
+                    <span style={{ fontSize: 10.5, color: "var(--grey-11)" }}>
+                      {c.theme}{c.consensusPct ? ` \u00b7 ${c.consensusPct}` : ""}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--ink-2)", marginTop: 4, lineHeight: 1.45 }}>{c.text}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -39001,11 +39158,18 @@ function AocsInline({ navigateToSession }) {
   if (selected) {
     const def = AOC_DEFS.find(d => d.code === selected);
     const rows = sessionsByAoc[selected] || [];
-    // Group rows by module for readability.
+    // Group rows by module for readability, then alphabetize: modules by
+    // name; sessions within each module by title.
     const byMod = new Map();
     for (const r of rows) {
       if (!byMod.has(r.mod.id)) byMod.set(r.mod.id, { mod: r.mod, sessions: [] });
       byMod.get(r.mod.id).sessions.push(r.session);
+    }
+    const byModSorted = [...byMod.values()].sort((a, b) =>
+      (a.mod.name || "").localeCompare(b.mod.name || ""));
+    for (const entry of byModSorted) {
+      entry.sessions.sort((a, b) =>
+        (a.title || "").localeCompare(b.title || ""));
     }
     return (
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", minWidth: 0 }}>
@@ -39029,7 +39193,7 @@ function AocsInline({ navigateToSession }) {
               No sessions yet tagged with {def.code}.
             </div>
           )}
-          {[...byMod.values()].map(({ mod, sessions }) => (
+          {byModSorted.map(({ mod, sessions }) => (
             <div key={mod.id} className="card" style={{ overflow: "hidden" }}>
               <div className="card-header" style={{ alignItems: "baseline" }}>
                 <div>
@@ -39047,7 +39211,7 @@ function AocsInline({ navigateToSession }) {
                     <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{s.title}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: "var(--session-title)" }}>{s.title}</div>
                       {s.aocSubdomain && (
                         <div style={{ fontSize: 11, color: "var(--ink-2)", marginTop: 2 }}>
                           Subdomain: <span style={{ color: def.color, fontWeight: 600 }}>{s.aocSubdomain}</span>
@@ -39105,54 +39269,65 @@ function AocsInline({ navigateToSession }) {
 }
 
 // ─── Curricular Threads inline ───────────────────────────────────────────────
-// Lists nine longitudinal threads. Each thread carries a list of keyword
-// regexes; matching is done across the session's title, methods, keywords,
-// clinical and societal fields. Click a thread → see all matching sessions.
+// Lists the canonical curricular threads tagged in the Phase 1 master map
+// (window.CANONICAL_THREADS, generated from THREAD-* sheets). Each thread
+// carries an explicit (modId, sessionN) list; we join against window.SESSIONS
+// to render the full session row. Click a thread → see all tagged sessions.
 function ThreadsInline({ navigateToSession }) {
-  const THREAD_DEFS = [
-    { id: "ethics",   label: "Medical Ethics",          keywords: ["ethic", "bioethic"] },
-    { id: "comm",     label: "Communication Skills",    keywords: ["communicat", "interview", "interpersonal", "rapport", "feedback"] },
-    { id: "nutr",     label: "Nutrition",               keywords: ["nutrition", "diet", "obesity", "metabolic syndrome"] },
-    { id: "ai",       label: "Artificial Intelligence", keywords: ["artificial intelligence", "machine learning", "\\bAI\\b"] },
-    { id: "pharm",    label: "Pharmacology",            keywords: ["pharmacolog", "pharmacokinetic", "pharmacodynamic", "pharmacotherap", "drug"] },
-    { id: "physio",   label: "Physiology",              keywords: ["physiolog"] },
-    { id: "embryo",   label: "Embryology",              keywords: ["embryolog", "embryonic", "fetal develop"] },
-    { id: "micro",    label: "Microbiology",            keywords: ["microbiolog", "bacteri", "virus", "viral", "fungus", "parasite", "pathogen", "antibiotic", "antimicrobial"] },
-    { id: "ebm",      label: "Evidence-Based Medicine (EBM)", keywords: ["evidence-based", "evidence based", "EBM", "biostatistic", "epidemiolog", "appraisal", "clinical trial", "randomized"] },
-  ];
+  const THREAD_DEFS = React.useMemo(() => {
+    const canonical = window.CANONICAL_THREADS || [];
+    return canonical
+      .map(t => ({ id: t.id, label: t.name, sessions: t.sessions || [] }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, []);
   const [selected, setSelected] = React.useState(null);
   const [pickedSession, setPickedSession] = React.useState(null);
 
-  // Pre-build text-hay per session and match against each thread's keyword
-  // regexes. Returns { threadId: [{mod, session, snippet}, ...] }
+  // Join thread (modId, sessionN) tuples to live session objects.
+  // Returns { threadId: [{mod, session}, ...] }
   const sessionsByThread = React.useMemo(() => {
     const C = window.CURRICULUM;
     const S = window.SESSIONS || {};
-    const out = {};
-    for (const t of THREAD_DEFS) out[t.id] = [];
-    const regexByThread = Object.fromEntries(THREAD_DEFS.map(t => [t.id, t.keywords.map(k => new RegExp(k, "i"))]));
+    const modById = {};
+    for (const m of (C.MODULES || [])) modById[m.id] = m;
+    // Build modId → { n → session } lookup once
+    const sessionLookup = {};
     for (const m of (C.MODULES || [])) {
       const pack = S[m.id]; if (!pack) continue;
-      for (const s of (pack.sessions || [])) {
-        const hay = [s.title, s.methods, s.keywords, s.clinical, s.societal,
-                     ...((s.objectives || []).map(o => o.text))].filter(Boolean).join(" ");
-        for (const t of THREAD_DEFS) {
-          if (regexByThread[t.id].some(rx => rx.test(hay))) {
-            out[t.id].push({ mod: m, session: s });
-          }
-        }
+      const byN = {};
+      for (const s of (pack.sessions || [])) byN[s.n] = s;
+      sessionLookup[m.id] = byN;
+    }
+    const out = {};
+    for (const t of THREAD_DEFS) {
+      const rows = [];
+      for (const tag of t.sessions) {
+        const mod = modById[tag.modId];
+        const session = sessionLookup[tag.modId] && sessionLookup[tag.modId][tag.n];
+        if (!mod || !session) continue;
+        rows.push({ mod, session, sub: tag.sub || "" });
       }
+      out[t.id] = rows;
     }
     return out;
-  }, []);
+  }, [THREAD_DEFS]);
 
   if (selected) {
     const def = THREAD_DEFS.find(d => d.id === selected);
     const rows = sessionsByThread[selected] || [];
+    const isNutr = def && def.id === "nutr";
+    const JAMA = (typeof window !== "undefined" && window.JAMA_NUTR_COMPETENCIES) || {};
     const byMod = new Map();
     for (const r of rows) {
-      if (!byMod.has(r.mod.id)) byMod.set(r.mod.id, { mod: r.mod, sessions: [] });
-      byMod.get(r.mod.id).sessions.push(r.session);
+      if (!byMod.has(r.mod.id)) byMod.set(r.mod.id, { mod: r.mod, rows: [] });
+      byMod.get(r.mod.id).rows.push({ session: r.session, sub: r.sub || "" });
+    }
+    // Alphabetize: modules by name; sessions within each module by title.
+    const byModSorted = [...byMod.values()].sort((a, b) =>
+      (a.mod.name || "").localeCompare(b.mod.name || ""));
+    for (const entry of byModSorted) {
+      entry.rows.sort((a, b) =>
+        (a.session.title || "").localeCompare(b.session.title || ""));
     }
     return (
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", minWidth: 0 }}>
@@ -39166,7 +39341,7 @@ function ThreadsInline({ navigateToSession }) {
             <div className="t-eyebrow">Curricular Thread</div>
             <h2 className="t-serif" style={{ marginTop: 4 }}>{def.label}</h2>
             <div className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
-              {rows.length} session{rows.length === 1 ? "" : "s"} matched via keyword search across {byMod.size} module{byMod.size === 1 ? "" : "s"}.
+              {rows.length} session{rows.length === 1 ? "" : "s"} tagged across {byMod.size} module{byMod.size === 1 ? "" : "s"}.
             </div>
           </div>
         </div>
@@ -39176,7 +39351,7 @@ function ThreadsInline({ navigateToSession }) {
               No matching sessions found in the current curriculum map.
             </div>
           )}
-          {[...byMod.values()].map(({ mod, sessions }) => (
+          {byModSorted.map(({ mod, rows: modRows }) => (
             <div key={mod.id} className="card" style={{ overflow: "hidden" }}>
               <div className="card-header" style={{ alignItems: "baseline" }}>
                 <div>
@@ -39185,20 +39360,54 @@ function ThreadsInline({ navigateToSession }) {
                     {mod.year} · {mod.phase === "Systems" ? "Organ Systems" : mod.phase}
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: "var(--grey-11)", fontFamily: "var(--font-mono)" }}>{sessions.length}</div>
+                <div style={{ fontSize: 11, color: "var(--grey-11)", fontFamily: "var(--font-mono)" }}>{modRows.length}</div>
               </div>
               <div>
-                {sessions.map((s, i) => (
+                {modRows.map(({ session: s, sub }, i) => {
+                  // Parse JAMA #N references out of the sub string when on the NUTR thread.
+                  let jamaNums = [];
+                  let subTheme = "";
+                  if (isNutr && sub) {
+                    const themeMatch = sub.match(/Theme:\s*([^,;\n]+)/i);
+                    if (themeMatch) subTheme = themeMatch[1].trim();
+                    const numMatches = [...sub.matchAll(/#\s*(\d+)/g)];
+                    jamaNums = numMatches.map(m => parseInt(m[1], 10)).filter(n => JAMA[String(n)]);
+                  }
+                  return (
                   <button key={s.id} onClick={() => setPickedSession({ session: s, mod })}
                           style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)", background: "transparent", border: "none", textAlign: "left", width: "100%", cursor: "pointer", fontFamily: "inherit" }}>
                     <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{s.title}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: "var(--session-title)" }}>{s.title}</div>
+                      {isNutr && jamaNums.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6, alignItems: "baseline" }}>
+                          {subTheme && (
+                            <span style={{ fontSize: 10.5, color: "var(--grey-11)", fontStyle: "italic", marginRight: 4 }}>
+                              JAMA theme: {subTheme}
+                            </span>
+                          )}
+                          {jamaNums.map((n) => {
+                            const c = JAMA[String(n)];
+                            const tooltip = c ? `JAMA #${n} — ${c.theme}${c.priority ? " · ★ Priority" : ""}${c.consensusPct ? ` · ${c.consensusPct} consensus` : ""}\n${c.text}` : `JAMA #${n}`;
+                            return (
+                              <span key={n} title={tooltip} className="pill cyan" style={{
+                                fontSize: 10.5, padding: "1px 7px",
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                              }}>JAMA #{n}{c && c.priority ? " ★" : ""}</span>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {!isNutr && sub && (
+                        <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 4, fontStyle: "italic" }}>{sub}</div>
+                      )}
                     </div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -39216,11 +39425,16 @@ function ThreadsInline({ navigateToSession }) {
           <div className="t-eyebrow">Cross-Cutting</div>
           <h2 className="t-serif" style={{ marginTop: 6, marginBottom: 4 }}>Curricular Threads</h2>
           <div className="muted" style={{ fontSize: 12.5, lineHeight: 1.5, maxWidth: 720 }}>
-            Longitudinal threads spanning the entire ASCEND curriculum. Each thread surfaces sessions matched via keyword search across session titles, methods, keywords, and objectives — refine the rules as the curriculum map evolves.
+            Longitudinal threads spanning the entire ASCEND curriculum. Each thread’s session list is sourced from the canonical THREAD-* sheets in the Phase 1 master curriculum map — regenerated whenever the master is updated.
           </div>
         </div>
       </div>
       <div className="grid-12" style={{ marginTop: 14, gap: 10 }}>
+        {THREAD_DEFS.length === 0 && (
+          <div className="card" style={{ gridColumn: "span 12", padding: "24px", textAlign: "center", color: "var(--grey-11)", fontSize: 13 }}>
+            No canonical threads available yet — refresh the master curriculum map to populate.
+          </div>
+        )}
         {THREAD_DEFS.map(def => {
           const count = (sessionsByThread[def.id] || []).length;
           return (
@@ -39501,7 +39715,7 @@ function SessionList({ pack, mod, openSession, setOpenSession, setHoveredObjIdx,
                       #{sessNum}
                     </div>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase} />
-                    <div style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>{s.title}</div>
+                    <div style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration}min</div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)", marginLeft: 8 }}>
                       <span className="t-num">{s.objectives.length}</span> obj · <span className="t-num">{new Set(s.objectives.flatMap(o => o.mlos)).size}</span> MLOs
@@ -39612,9 +39826,6 @@ function SessionObjectives({ session, pack, mod, setHoveredObjIdx }) {
                 onMouseLeave={() => setHoveredObjIdx(null)}
                 style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink-2)", paddingLeft: 6, cursor: "pointer" }}>
               <span>{o.text}</span>
-              <span className="row" style={{ display: "inline-flex", gap: 4, marginLeft: 8, verticalAlign: "middle" }}>
-                {(o.mlos || []).map(n => <span key={n} className="pill cyan">MLO {n}</span>)}
-              </span>
             </li>
           ))}
         </ol>
@@ -39624,6 +39835,13 @@ function SessionObjectives({ session, pack, mod, setHoveredObjIdx }) {
         </div>
       )}
 
+      {/* Conceptually-related sessions (within + across the curriculum).
+          Component lives in related-sessions.jsx and is attached to window.
+          Wrapped via React.createElement so this JSX block stays valid even
+          when the external script hasn't finished loading yet. */}
+      {window.RelatedSessions && window.RelatedSessions.Panel
+        ? React.createElement(window.RelatedSessions.Panel, { session, mod, keywordsOnly: true })
+        : null}
 
     </div>
   );
@@ -39677,7 +39895,7 @@ function AlignmentPanel({ session, alignment, hoveredObjIdx, mod }) {
         </div>
       ) : (
         <>
-          <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, lineHeight: 1.35 }}>{session.title}</div>
+          <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, lineHeight: 1.35, color: "var(--session-title)" }}>{session.title}</div>
           <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 4 }}>
             {mod?.name} · Week {session.week} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
           </div>
@@ -39725,6 +39943,42 @@ function AlignmentPanel({ session, alignment, hoveredObjIdx, mod }) {
               ))}
             </div>
           </div>
+
+          {/* JAMA Nutrition Competencies — appears only when this session is
+              tagged on the THREAD-NUTR sheet. Joined via window.jamaForSession.
+              Shows the full Eisenberg et al. 2024 competency statement. */}
+          {(() => {
+            if (!session || !mod) return null;
+            const jamas = (typeof window.jamaForSession === "function")
+              ? window.jamaForSession(mod.id, session.n) : [];
+            if (!jamas.length) return null;
+            const theme = (typeof window.jamaThemeForSession === "function")
+              ? window.jamaThemeForSession(mod.id, session.n) : "";
+            return (
+              <div style={{ marginTop: 22 }}>
+                <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+                  <div style={{ fontWeight: 600, fontSize: 12 }}>JAMA Nutrition Competencies</div>
+                  <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{jamas.length} mapped</div>
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--grey-11)", marginTop: 2, fontStyle: "italic" }}>
+                  Eisenberg et al. 2024{theme ? ` \u00b7 ${theme}` : ""}
+                </div>
+                <div className="col" style={{ gap: 8, marginTop: 8 }}>
+                  {jamas.map(c => (
+                    <div key={c.n} style={{ borderLeft: "2px solid var(--brand-cyan)", paddingLeft: 10 }}>
+                      <div className="row" style={{ gap: 6 }}>
+                        <span className="pill cyan">JAMA #{c.n}{c.priority ? " \u2605" : ""}</span>
+                        <span style={{ fontSize: 10.5, color: "var(--grey-11)" }}>
+                          {c.theme}{c.consensusPct ? ` \u00b7 ${c.consensusPct}` : ""}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--ink-2)", marginTop: 4, lineHeight: 1.45 }}>{c.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Trace summary */}
           <div style={{ marginTop: 22, padding: 12, background: "var(--grey-1)", border: "1px solid var(--grey-3)", borderRadius: 6, fontSize: 11.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
@@ -40472,7 +40726,6 @@ function LensBar({ lensObj, lensId, setLensId, lenses, onOpenManage, onOpenSearc
         </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.1 }}>{isStudent ? "Student Dashboard" : "Curriculum Dashboard"}</div>
-          <div style={{ fontSize: 10.5, color: "var(--grey-11)", letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 2 }}>2025</div>
         </div>
       </div>
 
@@ -40531,7 +40784,7 @@ function LensBar({ lensObj, lensId, setLensId, lenses, onOpenManage, onOpenSearc
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
           </svg>
-          <span style={{ flex: 1, textAlign: "left" }}>Search…</span>
+          <span style={{ flex: 1, textAlign: "left", fontWeight: 600, letterSpacing: "0.04em" }}>ASCEND</span>
           <span style={{ fontSize: 10, padding: "1px 5px", border: "1px solid var(--grey-3)", borderRadius: 3, background: "var(--paper)", color: "var(--grey-11)" }}>
             {isMac ? "⌘K" : "Ctrl+K"}
           </span>
@@ -40935,7 +41188,7 @@ function Segmented({ value, onChange, options }) {
 // ─── Tab bar ──────────────────────────────────────────────────
 function MobileTabBar({ active, onChange, savedCount }) {
   const items = [
-    { id: "search",    label: "Search",   icon: IconSearch },
+    { id: "search",    label: "ASCEND search",   icon: IconSearch },
     { id: "electives", label: "Electives", icon: IconBook },
     { id: "mepo",      label: "CA/MEPO",  icon: IconTarget },
     { id: "saved",     label: "Saved",    icon: IconBookmark, badge: savedCount },
@@ -41279,6 +41532,32 @@ function InfoBlock({ label, children }) {
     <div style={{ background: "#fff", borderRadius: 12, padding: "14px 16px 16px", marginBottom: 10 }}>
       <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 600, marginBottom: 6 }}>{label}</div>
       {children}
+    </div>
+  );
+}
+// Same visual as InfoBlock but the header is a button; tapping toggles the body.
+// Default state controlled by `defaultOpen` (defaults to true).
+function CollapsibleInfoBlock({ label, count, children, defaultOpen = true }) {
+  const [open, setOpen] = useStateMA(defaultOpen);
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, padding: 0, marginBottom: 10, overflow: "hidden" }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", padding: "14px 16px", background: "transparent", border: "none", cursor: "pointer",
+                 display: "flex", alignItems: "center", justifyContent: "space-between", textAlign: "left", fontFamily: "inherit" }}>
+        <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 600 }}>{label}</span>
+          {typeof count === "number" && (
+            <span style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 600,
+                           background: BRAND.grey1, padding: "1px 6px", borderRadius: 999, border: "1px solid " + BRAND.grey2 }}>{count}</span>
+          )}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={BRAND.grey8}
+             strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+             style={{ transition: "transform 160ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      {open && <div style={{ padding: "0 16px 16px" }}>{children}</div>}
     </div>
   );
 }
@@ -41949,7 +42228,7 @@ function SearchResultDetail({ item, onBack, onOpenItem }) {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px 18px", marginTop: -14, background: BRAND.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, WebkitOverflowScrolling: "touch" }}>
-        {item.kind === "Session"  && <SessionDetailBody item={item}/>}
+        {item.kind === "Session"  && <SessionDetailBody item={item} onOpenItem={onOpenItem}/>}
         {item.kind === "Module"   && <ModuleDetailBody  item={item} onOpenItem={onOpenItem}/>}
         {item.kind === "MEPO"     && <MepoDetailBody    item={item}/>}
         {item.kind === "MLO"      && <MloDetailBody     item={item}/>}
@@ -41958,12 +42237,32 @@ function SearchResultDetail({ item, onBack, onOpenItem }) {
   );
 }
 
-function SessionDetailBody({ item }) {
+function SessionDetailBody({ item, onOpenItem }) {
   const { session: s, moduleShort, moduleId, slos = [] } = item.payload || {};
   if (!s) return null;
   const S = window.SESSIONS || {};
   const pack = (moduleId && S[moduleId]) || {};
   const allMlos = pack.mlos || [];
+  const mod = window.CURRICULUM && window.CURRICULUM.MODULES.find(m => m.id === moduleId);
+
+  // Push a related session onto the same detail stack as the original.
+  // Mirrors the shape ModuleDetailBody's openSession() produces so the
+  // SearchResultDetail wrapper can render it identically.
+  function openRelated(entry) {
+    if (!onOpenItem) return;
+    const rs = entry.session;
+    const rmod = entry.mod;
+    const rSlos = (rs.objectives && rs.objectives.length)
+      ? rs.objectives.map((o) => o.text).filter(Boolean)
+      : (rs.slos || []).filter(Boolean);
+    onOpenItem({
+      kind: "Session", id: rs.id,
+      title: rs.title,
+      sub: (rmod.short || rmod.id) + (rs.week ? " · Week " + rs.week : "") + (rs.type ? " · " + rs.type : ""),
+      meta: [rs.duration ? rs.duration + " min" : null, rs.faculty].filter(Boolean).join(" · "),
+      payload: { session: rs, moduleId: rmod.id, moduleShort: rmod.short || rmod.id, slos: rSlos },
+    });
+  }
 
   // Aligned MLOs: union over session.objectives[].mlos (1-based indices into pack.mlos)
   const alignedMloIdx = new Set();
@@ -41979,6 +42278,19 @@ function SessionDetailBody({ item }) {
   const C = window.CURRICULUM;
   const mepoMeta = {};
   for (const me of ((C && C.MEPOS) || [])) mepoMeta[me.code] = me;
+
+  // Related sessions (keyword-based, split into within-module and across-curriculum).
+  // Computed eagerly so each subsection card carries its own count badge.
+  const RS = window.RelatedSessions;
+  const related = (RS && RS.findRelatedSessions && mod)
+    ? RS.findRelatedSessions(s, mod.id, { keywordsOnly: true, maxWithin: 8, maxAcross: 8 })
+    : { within: [], across: [] };
+  const rsPalette = {
+    paper: BRAND.paper, grey1: BRAND.grey1, grey2: BRAND.grey2, grey3: BRAND.grey3,
+    grey8: BRAND.grey8, grey11: BRAND.grey11, ink: BRAND.ink, ink2: BRAND.ink2,
+    cyan: BRAND.cyan, cyanDeep: BRAND.cyanDeep, cyanTint: BRAND.cyanTint,
+  };
+  const rsModName = mod ? (mod.short || mod.name || "module") : "module";
 
   return (
     <>
@@ -42007,8 +42319,11 @@ function SessionDetailBody({ item }) {
           </ol>
         </InfoBlock>
       )}
+
+      {/* Order (per design): MLO \u2192 Related Within \u2192 Related Across \u2192 Keywords \u2192 Aligned MEPOs */}
+
       {alignedMlos.length > 0 && (
-        <InfoBlock label={"Module learning objectives (MLOs) · " + alignedMlos.length}>
+        <CollapsibleInfoBlock label="Module learning objectives (MLOs)" count={alignedMlos.length} defaultOpen={false}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 6 }}>
             {alignedMlos.map((mlo) => (
               <div key={mlo.code} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
@@ -42017,8 +42332,37 @@ function SessionDetailBody({ item }) {
               </div>
             ))}
           </div>
-        </InfoBlock>
+        </CollapsibleInfoBlock>
       )}
+
+      {RS && RS.MobileRowList && mod && (
+        <CollapsibleInfoBlock label={`Related Sessions Within ${rsModName}`} count={related.within.length} defaultOpen={false}>
+          {React.createElement(RS.MobileRowList, {
+            items: related.within, showModuleBadge: false, onOpen: openRelated,
+            palette: rsPalette, emptyHint: `No other ${rsModName} sessions matched by keyword or SLO content.`,
+          })}
+        </CollapsibleInfoBlock>
+      )}
+
+      {RS && RS.MobileRowList && mod && (
+        <CollapsibleInfoBlock label="Related Sessions across ASCEND" count={related.across.length} defaultOpen={false}>
+          {React.createElement(RS.MobileRowList, {
+            items: related.across, showModuleBadge: true, onOpen: openRelated,
+            palette: rsPalette, emptyHint: "No matches in other curricular units yet.",
+          })}
+        </CollapsibleInfoBlock>
+      )}
+
+      {s.keywords && (
+        <CollapsibleInfoBlock label="Keywords" count={String(s.keywords).split(/[;,]/).map(k => k.trim()).filter(Boolean).length} defaultOpen={false}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, paddingTop: 6 }}>
+            {String(s.keywords).split(/[;,]/).map((k) => k.trim()).filter(Boolean).map((k) => (
+              <div key={k} style={{ fontSize: 11.5, padding: "3px 8px", background: BRAND.grey1, color: BRAND.ink2, borderRadius: 6, fontWeight: 500 }}>{k}</div>
+            ))}
+          </div>
+        </CollapsibleInfoBlock>
+      )}
+
       {alignedMepoList.length > 0 && (
         <InfoBlock label={"Aligned MEPOs · " + alignedMepoList.length}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 6 }}>
@@ -42034,15 +42378,33 @@ function SessionDetailBody({ item }) {
           </div>
         </InfoBlock>
       )}
-      {s.keywords && (
-        <InfoBlock label="Keywords">
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, paddingTop: 6 }}>
-            {String(s.keywords).split(/[;,]/).map((k) => k.trim()).filter(Boolean).map((k) => (
-              <div key={k} style={{ fontSize: 11.5, padding: "3px 8px", background: BRAND.grey1, color: BRAND.ink2, borderRadius: 6, fontWeight: 500 }}>{k}</div>
-            ))}
-          </div>
-        </InfoBlock>
-      )}
+
+      {/* JAMA Nutrition Competencies — joined via window.jamaForSession;
+          shows the full Eisenberg et al. 2024 statement, not just the code. */}
+      {(() => {
+        if (!mod || typeof window.jamaForSession !== "function") return null;
+        const jamas = window.jamaForSession(mod.id, s.n);
+        if (!jamas || !jamas.length) return null;
+        const theme = (typeof window.jamaThemeForSession === "function")
+          ? window.jamaThemeForSession(mod.id, s.n) : "";
+        return (
+          <InfoBlock label={"JAMA Nutrition Competencies \u00b7 " + jamas.length}>
+            {theme && (
+              <div style={{ fontSize: 11.5, color: BRAND.grey11, fontStyle: "italic", paddingTop: 4 }}>
+                Eisenberg et al. 2024 \u00b7 {theme}
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 6 }}>
+              {jamas.map((c) => (
+                <div key={c.n} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: BRAND.cyanDeep, fontWeight: 700, fontSize: 11, flex: "0 0 60px", paddingTop: 1, letterSpacing: 0.3 }}>JAMA #{c.n}{c.priority ? " \u2605" : ""}</span>
+                  <span style={{ flex: 1, fontSize: 13, color: BRAND.ink2, lineHeight: 1.45 }}>{c.text}</span>
+                </div>
+              ))}
+            </div>
+          </InfoBlock>
+        );
+      })()}
     </>
   );
 }
@@ -42143,7 +42505,7 @@ function ModuleDetailBody({ item, onOpenItem }) {
                   <div style={{ fontSize: 10, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700 }}>{s.week != null ? "Week " + s.week : "—"}</div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: BRAND.ink, lineHeight: 1.35 }}>{s.title}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: BRAND.sessionTitle || "#0B3B7A", lineHeight: 1.35 }}>{s.title}</div>
                   <div style={{ fontSize: 11.5, color: BRAND.grey11, marginTop: 3, fontWeight: 500 }}>
                     {[moduleTypeCode(s), s.duration ? s.duration + " min" : null].filter((x) => x && x !== "Other").join(" · ") || "—"}
                   </div>
@@ -42564,5 +42926,6 @@ function StudentsRouter() {
 ReactDOM.createRoot(document.getElementById("root")).render(<StudentsRouter />);
 
 </script>
+<script type="text/babel" data-presets="env,react" src="../related-sessions.jsx"></script>
 </body>
 </html>
