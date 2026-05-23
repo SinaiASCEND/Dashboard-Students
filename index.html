@@ -41926,10 +41926,16 @@ const BROWSE_HUB = [
     ] },
 ];
 
-function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
-  const [q, setQ] = useStateMA("");
-  const [filter, setFilter] = useStateMA("All"); // All | Session | Module | MEPO | MLO
-  const [navPath, setNavPath] = useStateMA([]);  // stack of browse nodes; [] = hub
+function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, setNavPath, filter, setFilter }) {
+  // q / navPath / filter are controlled by MobileApp so the user's browse
+  // position survives detail-open/close. Fall back to local state only if a
+  // caller doesn't pass them (defensive).
+  const [qLocal, setQLocal] = useStateMA("");
+  const [filterLocal, setFilterLocal] = useStateMA("All");
+  const [navPathLocal, setNavPathLocal] = useStateMA([]);
+  if (q === undefined)        { q = qLocal;        setQ = setQLocal; }
+  if (filter === undefined)   { filter = filterLocal;   setFilter = setFilterLocal; }
+  if (navPath === undefined)  { navPath = navPathLocal; setNavPath = setNavPathLocal; }
   const index = useMemoMA(() => buildCurriculumIndex(), []);
 
   const C = window.CURRICULUM;
@@ -42083,7 +42089,7 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
       ) : navPath.length === 0 ? (
         <BrowseHub onOpenTile={openHubTile}/>
       ) : (
-        <BrowseLevel node={currentNode} navPath={navPath} onTap={tapNode} onBack={popNode} onHome={resetNav} nodeChildren={nodeChildren}/>
+        <BrowseLevel node={currentNode} navPath={navPath} onTap={tapNode} onBack={popNode} onHome={resetNav} onJumpTo={(i) => setNavPath((p) => p.slice(0, i + 1))} nodeChildren={nodeChildren}/>
       )}
     </div>
   );
@@ -42113,7 +42119,7 @@ function BrowseHub({ onOpenTile }) {
   );
 }
 
-function BrowseLevel({ node, navPath, onTap, onBack, onHome, nodeChildren }) {
+function BrowseLevel({ node, navPath, onTap, onBack, onHome, onJumpTo, nodeChildren }) {
   const items = nodeChildren(node);
   return (
     <>
@@ -42124,12 +42130,23 @@ function BrowseLevel({ node, navPath, onTap, onBack, onHome, nodeChildren }) {
         </button>
         <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: BRAND.ink, display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
           <button onClick={onHome} style={{ background: "transparent", border: "none", color: BRAND.cyan, padding: 0, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>Browse</button>
-          {navPath.map((n, i) => (
-            <span key={n.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-              <IconChevR size={11} stroke={BRAND.grey3} sw={2.6}/>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: i === navPath.length - 1 ? BRAND.ink : BRAND.grey11, fontWeight: i === navPath.length - 1 ? 600 : 500 }}>{n.label}</span>
-            </span>
-          ))}
+          {navPath.map((n, i) => {
+            const isLast = i === navPath.length - 1;
+            const jump = !isLast && onJumpTo ? () => onJumpTo(i) : null;
+            return (
+              <span key={n.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}>
+                <IconChevR size={11} stroke={BRAND.grey3} sw={2.6}/>
+                {jump ? (
+                  <button onClick={jump}
+                    style={{ background: "transparent", border: "none", padding: 0, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: BRAND.cyan, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    {n.label}
+                  </button>
+                ) : (
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: BRAND.ink, fontWeight: 600 }}>{n.label}</span>
+                )}
+              </span>
+            );
+          })}
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px 18px", WebkitOverflowScrolling: "touch" }}>
@@ -42854,6 +42871,14 @@ function MobileApp() {
   const [savedSet, setSavedSet] = useStateMA(loadSaved());
   const [refreshNonce, setRefreshNonce] = useStateMA(0);
 
+  // Search/browse state lifted out of CurriculumSearch so it survives when
+  // MobileApp swaps in a SearchResultDetail and back. Without this, opening a
+  // session from Curricular Threads then hitting Back would unmount the search
+  // component and the user would land back on the browse hub.
+  const [searchQ, setSearchQ] = useStateMA("");
+  const [searchNavPath, setSearchNavPath] = useStateMA([]);
+  const [searchFilter, setSearchFilter] = useStateMA("All");
+
   function toggleSave(code) {
     setSavedSet((prev) => {
       const next = new Set(prev);
@@ -42878,6 +42903,12 @@ function MobileApp() {
     setDetailCode(null);
     setResultStack([]);
     setPlaceholder(null);
+    // Clear search state when leaving / re-entering the search tab so the
+    // user lands on a fresh search root (only when switching away from it).
+    if (next !== "search") {
+      setSearchQ("");
+      setSearchNavPath([]);
+    }
   }
 
   function openMepoFromList(me) {
@@ -42904,7 +42935,11 @@ function MobileApp() {
       </PullToRefresh>
     );
   } else if (tab === "search") {
-    body = <CurriculumSearch onOpenResult={pushResult} onOpenPlaceholder={(p) => setPlaceholder(p)}/>;
+    body = <CurriculumSearch
+      q={searchQ} setQ={setSearchQ}
+      navPath={searchNavPath} setNavPath={setSearchNavPath}
+      filter={searchFilter} setFilter={setSearchFilter}
+      onOpenResult={pushResult} onOpenPlaceholder={(p) => setPlaceholder(p)}/>;
   } else if (tab === "saved") {
     body = <SavedList savedSet={savedSet} onOpen={(code) => setDetailCode(code)} onToggleSave={toggleSave} onGoBrowse={() => switchTab("electives")}/>;
   } else if (tab === "mepo") {
