@@ -34995,6 +34995,10 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
       <div className="crumbs">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
+          const isObj = c && typeof c === "object";
+          const label = isObj ? c.label : c;
+          const onClick = isObj ? c.onClick : null;
+          const clickable = !!onClick && !isLast;
           return (
             <React.Fragment key={i}>
               <span className="sep">/</span>
@@ -35002,9 +35006,22 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
                 <span style={{
                   color: accentDeep, fontWeight: 600,
                   background: accentTint, padding: "2px 8px", borderRadius: 4,
-                }}>{c}</span>
+                }}>{label}</span>
+              ) : clickable ? (
+                <button
+                  type="button"
+                  onClick={onClick}
+                  style={{
+                    color: "var(--grey-11)", background: "transparent", border: "none",
+                    padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline",
+                    textUnderlineOffset: 2, textDecorationColor: "transparent",
+                    transition: "text-decoration-color 120ms, color 120ms",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = accentDeep; e.currentTarget.style.textDecorationColor = accentDeep; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--grey-11)"; e.currentTarget.style.textDecorationColor = "transparent"; }}
+                >{label}</button>
               ) : (
-                <span style={{ color: "var(--grey-11)" }}>{c}</span>
+                <span style={{ color: "var(--grey-11)" }}>{label}</span>
               )}
             </React.Fragment>
           );
@@ -36610,7 +36627,7 @@ function VariantA() {
   const mod = C.MODULES.find(m => m.id === moduleId);
   const crumbs = view === "overview"
     ? ["ASCEND Curriculum", "All Modules"]
-    : view === "module" ? ["ASCEND Curriculum", mod.name]
+    : view === "module" ? [{ label: "ASCEND Curriculum", onClick: () => setView("overview") }, mod.name]
     : view === "mlo" ? ["ASCEND Curriculum", mod.name, "MLO Coverage"]
     : view === "mepo" ? ["ASCEND Curriculum", "MEPO Map"]
     : ["ASCEND Curriculum", "Accreditation Export"];
@@ -37445,8 +37462,8 @@ function VariantB() {
   const mod = C.MODULES.find(m => m.id === moduleId) || C.MODULES[0];
 
   const crumbs = view === "outcomes" ? ["Program Objectives"]
-    : view === "outcome" ? ["Program Objectives", mepo.code]
-    : view === "module" ? ["Program Objectives", mepo.code, mod.short]
+    : view === "outcome" ? [{ label: "Program Objectives", onClick: () => setView("outcomes") }, mepo.code]
+    : view === "module" ? [{ label: "Program Objectives", onClick: () => setView("outcomes") }, { label: mepo.code, onClick: () => setView("outcome") }, mod.short]
     : ["Accreditation"];
 
   return (
@@ -38613,7 +38630,17 @@ function VariantD() {
   }
   const leafGroup = leafGroupLabel(leaf);
   const leafCrumb = leaf ? (leafGroup ? `${leafGroup} · ${leaf.label}` : leaf.label) : null;
-  const crumbs = ["ASCEND Curriculum", leafCrumb, activeMod?.short, session?.title].filter(Boolean);
+  // Clickable crumbs:
+  //   "ASCEND Curriculum" → reset leaf to phase root
+  //   <leaf>              → clear active mod + session
+  //   <module short>      → clear session
+  //   <session title>     → terminal, non-clickable
+  const crumbs = [
+    { label: "ASCEND Curriculum", onClick: () => { setLeafId("p1"); setOpenModule(null); setOpenSession(null); } },
+    leafCrumb ? { label: leafCrumb, onClick: () => { setOpenModule(null); setOpenSession(null); } } : null,
+    activeMod ? { label: activeMod.short, onClick: () => setOpenSession(null) } : null,
+    session ? session.title : null,
+  ].filter(Boolean);
   const screenLabel = leaf ? "D · " + (leaf.id) + (session ? " · " + session.id : "") : "D";
 
   function selectLeaf(id) {
@@ -40100,7 +40127,10 @@ function VariantE() {
     setFilterDuration("All");
   }
 
-  const crumbs = ["Electives", selected ? selected.code : null].filter(Boolean);
+  const crumbs = [
+    selected ? { label: "Electives", onClick: () => setSelected(null) } : "Electives",
+    selected ? selected.code : null,
+  ].filter(Boolean);
 
   return (
     <div className="dash" data-screen-label={`E · electives${selected ? " · " + selected.code : ""}`}>
@@ -40977,6 +41007,12 @@ window.CA_DIRECTORY = [
       { name: "Maaike Van Gerwen",      role: "Scientific & Scholarly Discovery · AOC Director" },
       { name: "Krishna Chokshi",        role: "Medical Ethics · Content Director" },
       { name: "Jacqueline Sheehan",     role: "Communication · Content Director" },
+      { name: "Bess Storch",            role: "Evidence-Based Medicine (EBM) · Content Director" },
+      { name: "Lili Chan",              role: "Augmented Intelligence · Content Director" },
+      { name: "Tonia Kim",              role: "Pharmacology · Content Director" },
+      { name: "Cynthia Abraham",        role: "Embryology · Content Director" },
+      { name: "Daniel Caplivski",       role: "Microbiology · Content Director" },
+      { name: "Roberto Posada",         role: "Microbiology · Content Director" },
     ],
   },
 ];
@@ -41879,15 +41915,14 @@ const BROWSE_HUB = [
   { id: "threads", label: "Curricular Threads", sub: "Longitudinal cross-curriculum threads",
     color: BRAND.cyanDeep, tint: BRAND.cyanTint, glyph: "CT",
     items: [
-      { id: "th-ethics", label: "Medical Ethics",                  sessionsFilter: { keywords: ["ethic", "bioethic"] } },
-      { id: "th-comm",   label: "Communication Skills",            sessionsFilter: { keywords: ["communicat", "interview", "interpersonal", "rapport", "feedback"] } },
-      { id: "th-nutr",   label: "Nutrition",                       sessionsFilter: { keywords: ["nutrition", "diet", "obesity", "metabolic syndrome"] } },
-      { id: "th-ai",     label: "Artificial Intelligence",         sessionsFilter: { keywords: ["artificial intelligence", "machine learning", "\\bAI\\b"] } },
-      { id: "th-pharm",  label: "Pharmacology",                    sessionsFilter: { keywords: ["pharmacolog", "pharmacokinetic", "pharmacodynamic", "pharmacotherap", "drug"] } },
-      { id: "th-physio", label: "Physiology",                      sessionsFilter: { keywords: ["physiolog"] } },
-      { id: "th-embryo", label: "Embryology",                      sessionsFilter: { keywords: ["embryolog", "embryonic", "fetal develop"] } },
-      { id: "th-micro",  label: "Microbiology",                    sessionsFilter: { keywords: ["microbiolog", "bacteri", "virus", "viral", "fungus", "pathogen", "antibiotic", "antimicrobial", "parasite"] } },
-      { id: "th-ebm",    label: "Evidence-Based Medicine (EBM)",   sessionsFilter: { keywords: ["evidence-based", "evidence based", "EBM", "biostatistic", "epidemiolog", "appraisal", "randomized", "clinical trial"] } },
+      { id: "th-ai",     label: "Artificial Intelligence",   sessionsFilter: { threadId: "ai" } },
+      { id: "th-dp",     label: "Disease Prevention",         sessionsFilter: { threadId: "dp" } },
+      { id: "th-embr",   label: "Embryology",                 sessionsFilter: { threadId: "embr" } },
+      { id: "th-hm",     label: "Health Maintenance",         sessionsFilter: { threadId: "hm" } },
+      { id: "th-micro",  label: "Microbiology",               sessionsFilter: { threadId: "micro" } },
+      { id: "th-nutr",   label: "Nutrition",                  sessionsFilter: { threadId: "nutr" } },
+      { id: "th-pharm",  label: "Pharmacology",               sessionsFilter: { threadId: "pharm" } },
+      { id: "th-phys",   label: "Physiology",                 sessionsFilter: { threadId: "phys" } },
     ] },
 ];
 
@@ -41940,6 +41975,11 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
           let match = false;
           if (filter.aoc) {
             match = (s.aoc || "").trim().toUpperCase() === filter.aoc;
+          } else if (filter.threadId) {
+            // Match against the canonical thread tag injected by
+            // injectCanonicalIntoSessions (s.threads is an array of thread
+            // ids the session belongs to per the master curriculum map).
+            match = Array.isArray(s.threads) && s.threads.includes(filter.threadId);
           } else if (filter.keywords) {
             const hay = [s.title, s.methods, s.keywords, s.clinical, s.societal,
                          ...(s.objectives || []).map((o) => o.text)].filter(Boolean).join(" ");
