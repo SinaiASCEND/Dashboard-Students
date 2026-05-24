@@ -278,10 +278,17 @@
     if (!query || !query.trim()) {
       return { summary: "Ask anything about the electives catalog.", picks: [] };
     }
-    if (!window.claude || typeof window.claude.complete !== "function") {
-      throw new Error("Claude helper not available in this environment.");
-    }
     const candidates = preFilterElectives(all, query, max);
+    if (!window.claude || typeof window.claude.complete !== "function") {
+      const picks = candidates.slice(0, 8).map((e) => ({ ...e, why: "" }));
+      return {
+        summary: picks.length
+          ? `Top ${picks.length} keyword matches for “${query}” (Ask ASCEND AI is unavailable in this environment).`
+          : `No keyword matches for “${query}”.`,
+        picks,
+        _fallback: "keyword",
+      };
+    }
     const prompt = buildElectivesPrompt(query, candidates);
     const raw = await window.claude.complete(prompt);
     const json = extractJSON(raw);
@@ -308,11 +315,20 @@
     if (!query || !query.trim()) {
       return { summary: "Ask anything about the ASCEND curriculum.", picks: [] };
     }
-    if (!window.claude || typeof window.claude.complete !== "function") {
-      throw new Error("Claude helper not available in this environment.");
-    }
     const index = buildIndex();
     const candidates = preFilter(index, query, candidateCount);
+    // Fallback for environments without the Claude helper (e.g. GitHub Pages):
+    // serve up the top keyword-scored picks so search still works.
+    if (!window.claude || typeof window.claude.complete !== "function") {
+      const picks = candidates.slice(0, 8).map((it) => ({ ...it, why: "" }));
+      return {
+        summary: picks.length
+          ? `Top ${picks.length} keyword matches for “${query}” (Ask ASCEND AI is unavailable in this environment).`
+          : `No keyword matches for “${query}”.`,
+        picks,
+        _fallback: "keyword",
+      };
+    }
     const prompt = buildPrompt(query, candidates, audience);
     const raw = await window.claude.complete(prompt);
     const json = extractJSON(raw);
