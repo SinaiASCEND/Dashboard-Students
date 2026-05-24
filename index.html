@@ -43059,10 +43059,33 @@ function MobileCalendarTab() {
     block:      { bg: "rgba(0,140,192,0.10)",   chip: BRAND.cyanDeep,    label: "Block" },
     other:      { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "" },
   };
-  // Filter
+  // Filter + merge: when viewing "all" classes, the same session (Labor Day,
+  // MD/PhD Retreat, etc.) is duplicated once per class in the underlying data.
+  // We merge those into a single entry and collect all the classes it applies
+  // to so the row stays clean.
   const filtered = useMemoMA(() => {
-    if (classFilter === "all") return all;
-    return all.filter((e) => e.className === classFilter);
+    const base = classFilter === "all"
+      ? all
+      : all.filter((e) => e.className === classFilter);
+    if (classFilter !== "all") return base;
+    const m = new Map();
+    for (const e of base) {
+      // Same date + end + label + kind = same real-world event.
+      const key = `${e.date}|${e.end || ""}|${e.label}|${e.kind}`;
+      if (!m.has(key)) {
+        m.set(key, { ...e, classNames: e.className ? [e.className] : [] });
+      } else {
+        const existing = m.get(key);
+        if (e.className && !existing.classNames.includes(e.className)) {
+          existing.classNames.push(e.className);
+        }
+        // Keep restricted-flag pessimistic: if any class marks it restricted,
+        // the merged entry is restricted.
+        if (e.restricted) existing.restricted = true;
+      }
+    }
+    // Preserve original date sort.
+    return [...m.values()].sort((a, b) => a.date.localeCompare(b.date));
   }, [all, classFilter]);
   // Group by month
   const byMonth = useMemoMA(() => {
@@ -43183,9 +43206,19 @@ function MobileCalendarTab() {
                             Restricted
                           </span>
                         )}
-                        {ev.className && classFilter === "all" && (
-                          <ClassPill cls={ev.className}/>
-                        )}
+                        {classFilter === "all" && (() => {
+                          const classes = ev.classNames && ev.classNames.length
+                            ? ev.classNames
+                            : (ev.className ? [ev.className] : []);
+                          if (classes.length === 0) return null;
+                          const order = { M1: 0, M2: 1, M3: 2, M4: 3 };
+                          const sorted = [...classes].sort((a, b) => (order[a] ?? 9) - (order[b] ?? 9));
+                          return (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                              {sorted.map((c) => <ClassPill key={c} cls={c}/>)}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div style={{ fontSize: 13.5, color: BRAND.ink, lineHeight: 1.35, fontWeight: 600 }}>{ev.label}</div>
                       {ev.section && (
