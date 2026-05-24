@@ -263,6 +263,7 @@ hr.sep { border: 0; border-top: 1px solid var(--grey-3); margin: 16px 0; }
 <script src="canonical-aocs.js"></script>
 <script src="jama-nutr-competencies.js"></script>
 <script src="ask-ascend.js"></script>
+<script src="academic-calendar.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -41438,7 +41439,7 @@ function MobileTabBar({ active, onChange, savedCount }) {
   const items = [
     { id: "search",    label: "ASCEND",   icon: IconSearch },
     { id: "electives", label: "Electives", icon: IconBook },
-    { id: "mepo",      label: "CA/MEPO",  icon: IconTarget },
+    { id: "calendar",  label: "Calendar", icon: IconCal },
     { id: "saved",     label: "Saved",    icon: IconBookmark, badge: savedCount },
   ];
   return (
@@ -42999,6 +43000,218 @@ function SessionsStub() {
   );
 }
 
+// ─── Calendar tab (AY 2026-27) ───────────────────────────────
+function MobileCalendarTab() {
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  const all = (typeof window !== "undefined" && (window.ASCEND_CALENDAR_ALL || window.ASCEND_CALENDAR_2026_27)) || [];
+  const CLASS_OPTIONS = [
+    { id: "all", label: "All classes" },
+    { id: "M1",  label: "Class of 2030 (M1)" },
+    { id: "M2",  label: "Class of 2029 (M2)" },
+    { id: "M3",  label: "Class of 2028 (M3)" },
+    { id: "M4",  label: "Class of 2027 (M4)" },
+  ];
+  // Class pill: different shape + color per class so the ALL view shows at a
+  // glance which class each event belongs to. Shapes are intentionally
+  // distinct (circle / rounded-square / pill / diamond) to be readable
+  // without color (a11y).
+  const CLASS_PILL = {
+    M1: { color: "#008CC0", bg: "rgba(0,140,192,0.14)",  shape: "circle"  },
+    M2: { color: "#221F72", bg: "rgba(34,31,114,0.12)",  shape: "rounded" },
+    M3: { color: "#D80B8C", bg: "rgba(216,11,140,0.12)", shape: "pill"    },
+    M4: { color: "#58595B", bg: "rgba(88,89,91,0.14)",   shape: "diamond" },
+  };
+  function ClassPill({ cls }) {
+    const p = CLASS_PILL[cls];
+    if (!p) return null;
+    if (p.shape === "diamond") {
+      // Rotated square — needs an inner wrapper for un-rotated text.
+      return (
+        <span style={{ display: "inline-grid", placeItems: "center", width: 22, height: 22, flexShrink: 0 }}>
+          <span style={{ width: 16, height: 16, background: p.bg, border: "1.5px solid " + p.color, transform: "rotate(45deg)", borderRadius: 2 }}/>
+          <span style={{ position: "absolute", fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: 0.2 }}>{cls}</span>
+        </span>
+      );
+    }
+    const radius = p.shape === "circle" ? "50%" : p.shape === "rounded" ? 4 : 999;
+    const px = p.shape === "circle" ? 5 : p.shape === "rounded" ? 6 : 8;
+    const w = p.shape === "circle" ? 22 : "auto";
+    const h = p.shape === "circle" ? 22 : "auto";
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        background: p.bg, color: p.color, fontWeight: 700,
+        fontSize: 9, letterSpacing: 0.3, padding: p.shape === "circle" ? 0 : `2px ${px}px`,
+        borderRadius: radius, border: "1.5px solid " + p.color,
+        width: w, height: h, minWidth: w, lineHeight: 1, flexShrink: 0,
+      }}>{cls}</span>
+    );
+  }
+  const [classFilter, setClassFilter] = useStateMA("all");
+  const KIND_COLOR = {
+    module:     { bg: "rgba(0,174,239,0.10)",   chip: BRAND.cyanDeep,    label: "Module" },
+    exam:       { bg: "rgba(184,43,30,0.10)",   chip: BRAND.bad,         label: "Exam" },
+    osce:       { bg: "rgba(34,31,114,0.10)",   chip: BRAND.violet,      label: "OSCE" },
+    holiday:    { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "Holiday" },
+    break:      { bg: "rgba(31,138,75,0.10)",   chip: "#1F8A4C",         label: "Break" },
+    ceremony:   { bg: "rgba(216,11,140,0.10)",  chip: BRAND.magenta,     label: "Ceremony" },
+    transition: { bg: "rgba(192,38,211,0.10)",  chip: "#C026D3",         label: "Transition" },
+    block:      { bg: "rgba(0,140,192,0.10)",   chip: BRAND.cyanDeep,    label: "Block" },
+    other:      { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "" },
+  };
+  // Filter
+  const filtered = useMemoMA(() => {
+    if (classFilter === "all") return all;
+    return all.filter((e) => e.className === classFilter);
+  }, [all, classFilter]);
+  // Group by month
+  const byMonth = useMemoMA(() => {
+    const m = new Map();
+    for (const e of filtered) {
+      const monthKey = e.date.slice(0, 7); // "2026-08"
+      if (!m.has(monthKey)) m.set(monthKey, []);
+      m.get(monthKey).push(e);
+    }
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filtered]);
+
+  // Auto-scroll to the current month on mount so the calendar opens to "today".
+  // Falls back to the first month if today is outside the AY range.
+  const scrollHostRef = React.useRef(null);
+  const monthRefs = React.useRef({});
+  React.useEffect(() => {
+    const now = new Date();
+    const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const months = byMonth.map((b) => b[0]);
+    let target = months.find((m) => m === cur);
+    if (!target) target = months.find((m) => m > cur);
+    if (!target) target = months[months.length - 1];
+    if (!target) return;
+    const el = monthRefs.current[target];
+    const host = scrollHostRef.current;
+    if (el && host) {
+      const top = el.offsetTop - 8;
+      host.scrollTop = Math.max(0, top);
+    }
+  }, [byMonth.length, classFilter]);
+  function fmtDate(iso) {
+    const [y, mo, d] = iso.split("-").map(Number);
+    const dt = new Date(y, mo - 1, d);
+    return { day: d, wd: dt.toLocaleString(undefined, { weekday: "short" }) };
+  }
+  function fmtRange(start, end) {
+    if (!end || end === start) return "";
+    const a = fmtDate(start), b = fmtDate(end);
+    return ` → ${b.day}`;
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
+      {/* App bar */}
+      <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
+        <div style={{ padding: "10px 16px 8px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Academic Calendar</div>
+        </div>
+        <div style={{ padding: "0 16px", fontSize: 12.5, opacity: 0.9, marginBottom: 8 }}>AY 2025–26 & 2026–27 · ISMMS MD Program</div>
+        {/* Class chips */}
+        <div style={{ padding: "0 12px", display: "flex", gap: 5, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          {CLASS_OPTIONS.map((c) => {
+            const on = classFilter === c.id;
+            return (
+              <button key={c.id} onClick={() => setClassFilter(c.id)}
+                style={{
+                  flex: "0 0 auto", fontSize: 11.5, fontWeight: 600, padding: "5px 11px", borderRadius: 999,
+                  border: "1px solid " + (on ? "#fff" : "rgba(255,255,255,0.5)"),
+                  background: on ? "#fff" : "transparent",
+                  color: on ? (BRAND.cyanDeep) : "#fff",
+                  cursor: "pointer", letterSpacing: 0.04, fontFamily: sans, whiteSpace: "nowrap",
+                }}>{c.label}</button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Body */}
+      <div ref={scrollHostRef} style={{ flex: 1, overflowY: "auto", padding: "14px 14px 18px", WebkitOverflowScrolling: "touch" }}>
+        {byMonth.length === 0 && (
+          <div style={{ background: "#fff", borderRadius: 12, padding: "30px 22px", textAlign: "center", color: BRAND.grey11 }}>
+            No events for this filter.
+          </div>
+        )}
+        {byMonth.map(([monthKey, events]) => (
+          <div key={monthKey} ref={(el) => { monthRefs.current[monthKey] = el; }} style={{ marginBottom: 16, scrollMarginTop: 12 }}>
+            <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px", display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span>{fmtMonth(monthKey)}</span>
+              <span style={{ color: BRAND.grey7, fontWeight: 600 }}>· {events.length}</span>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+              {events.map((ev, i) => {
+                const d = fmtDate(ev.date);
+                const range = fmtRange(ev.date, ev.end);
+                const k = KIND_COLOR[ev.kind] || KIND_COLOR.other;
+                return (
+                  <div key={ev.date + ":" + ev.label + ":" + i} style={{
+                    display: "flex", alignItems: "stretch", gap: 0, borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2,
+                  }}>
+                    {/* Date column */}
+                    <div style={{
+                      flex: "0 0 56px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      padding: "10px 4px", background: k.bg, borderRight: "1px solid " + BRAND.grey2,
+                    }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: k.chip, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{d.day}</div>
+                      <div style={{ fontSize: 9.5, color: k.chip, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", marginTop: 2 }}>{d.wd}</div>
+                      {range && <div style={{ fontSize: 9, color: BRAND.grey11, marginTop: 3, fontWeight: 600 }}>{range}</div>}
+                    </div>
+                    {/* Content */}
+                    <div style={{ flex: 1, padding: "11px 12px", minWidth: 0 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                        {k.label && (
+                          <span style={{ fontSize: 9, color: "#fff", background: k.chip, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3 }}>
+                            {k.label}
+                          </span>
+                        )}
+                        {ev.restricted && (
+                          <span title="Restricted date — no planned absences"
+                            style={{ fontSize: 9, color: BRAND.bad, background: "rgba(184,43,30,0.10)", fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3 }}>
+                            Restricted
+                          </span>
+                        )}
+                        {ev.className && classFilter === "all" && (
+                          <ClassPill cls={ev.className}/>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 13.5, color: BRAND.ink, lineHeight: 1.35, fontWeight: 600 }}>{ev.label}</div>
+                      {ev.section && (
+                        <div style={{ fontSize: 11, color: BRAND.grey11, marginTop: 3, fontStyle: "italic" }}>{ev.section}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {/* Legend */}
+        <div style={{ background: "#fff", borderRadius: 12, padding: "12px 14px", marginTop: 4, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+          <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Legend</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {Object.entries(KIND_COLOR).filter(([k, v]) => v.label).map(([k, v]) => (
+              <div key={k} style={{ fontSize: 11, color: BRAND.ink2, background: v.bg, padding: "2px 8px", borderRadius: 6, fontWeight: 600 }}>
+                <span style={{ color: v.chip, fontWeight: 700, marginRight: 4 }}>●</span>
+                {v.label}
+              </div>
+            ))}
+            <div style={{ fontSize: 11, color: BRAND.bad, background: "rgba(184,43,30,0.10)", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>
+              ★ Restricted = no planned absences
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ─── MEPO list tab ────────────────────────────────────────────
 // Replaces the old "Me / Profile" tab. Shows all canonical MEPOs grouped by
 // domain; tapping one opens it in the shared MEPO detail view (via
@@ -43318,6 +43531,8 @@ function MobileApp() {
     body = <SavedList savedSet={savedSet} onOpen={(code) => setDetailCode(code)} onToggleSave={toggleSave} onGoBrowse={() => switchTab("electives")}/>;
   } else if (tab === "mepo") {
     body = <MepoListTab onOpenMepo={openMepoFromList}/>;
+  } else if (tab === "calendar") {
+    body = <MobileCalendarTab/>;
   }
 
   return (
