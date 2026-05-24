@@ -262,6 +262,7 @@ hr.sep { border: 0; border-top: 1px solid var(--grey-3); margin: 16px 0; }
 <script src="canonical-threads.js"></script>
 <script src="canonical-aocs.js"></script>
 <script src="jama-nutr-competencies.js"></script>
+<script src="ask-ascend.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -34995,6 +34996,10 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
       <div className="crumbs">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
+          const isObj = c && typeof c === "object";
+          const label = isObj ? c.label : c;
+          const onClick = isObj ? c.onClick : null;
+          const clickable = !!onClick && !isLast;
           return (
             <React.Fragment key={i}>
               <span className="sep">/</span>
@@ -35002,9 +35007,22 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
                 <span style={{
                   color: accentDeep, fontWeight: 600,
                   background: accentTint, padding: "2px 8px", borderRadius: 4,
-                }}>{c}</span>
+                }}>{label}</span>
+              ) : clickable ? (
+                <button
+                  type="button"
+                  onClick={onClick}
+                  style={{
+                    color: "var(--grey-11)", background: "transparent", border: "none",
+                    padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline",
+                    textUnderlineOffset: 2, textDecorationColor: "transparent",
+                    transition: "text-decoration-color 120ms, color 120ms",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = accentDeep; e.currentTarget.style.textDecorationColor = accentDeep; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--grey-11)"; e.currentTarget.style.textDecorationColor = "transparent"; }}
+                >{label}</button>
               ) : (
-                <span style={{ color: "var(--grey-11)" }}>{c}</span>
+                <span style={{ color: "var(--grey-11)" }}>{label}</span>
               )}
             </React.Fragment>
           );
@@ -35776,6 +35794,11 @@ function GlobalSearch({ open, onClose }) {
   const [view, setView] = useStateGS("typeahead");    // "typeahead" | "results"
   const [activeIdx, setActiveIdx] = useStateGS(0);
   const [detailSession, setDetailSession] = useStateGS(null); // result item for opened session
+  // Ask-ASCEND (natural-language) state
+  const [askMode, setAskMode] = useStateGS(false);
+  const [askLoading, setAskLoading] = useStateGS(false);
+  const [askResult, setAskResult] = useStateGS(null);  // { summary, picks: [...] } or null
+  const [askError, setAskError] = useStateGS(null);
   const inputRef = useRefGS(null);
 
   const index = useMemoGS(() => (open ? buildSearchIndex() : []), [open]);
@@ -35791,6 +35814,10 @@ function GlobalSearch({ open, onClose }) {
       setView("typeahead");
       setActiveIdx(0);
       setDetailSession(null);
+      setAskMode(false);
+      setAskResult(null);
+      setAskError(null);
+      setAskLoading(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -35805,6 +35832,32 @@ function GlobalSearch({ open, onClose }) {
     setDetailSession(null);
   }
 
+  // Run an Ask-ASCEND natural-language query. Audience is inferred from the
+  // dashboard variant (STUDENT_VIEW flag), defaulting to "both" on directors.
+  async function runAsk(query) {
+    const text = (query ?? q).trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askAscend) {
+      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
+      setView("ask");
+      return;
+    }
+    setView("ask");
+    setAskLoading(true);
+    setAskError(null);
+    setAskResult(null);
+    setDetailSession(null);
+    try {
+      const audience = (typeof window !== "undefined" && window.STUDENT_VIEW) ? "student" : "both";
+      const res = await window.AskAscend.askAscend(text, { audience });
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+
   function onKeyTypeahead(e) {
     if (e.key === "Escape") { onClose(); return; }
     if (e.key === "ArrowDown") {
@@ -35815,12 +35868,19 @@ function GlobalSearch({ open, onClose }) {
       setActiveIdx((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      // Enter always commits to the results page (per requested UX).
       commitSearch();
     }
   }
 
   function openItem(r) {
+    // Ask ASCEND picks come pre-hydrated from window.AskAscend (with modId,
+    // sessionN, kind, id) but without the `open` callback or full `session`
+    // reference the detail overlay needs. Resolve against the existing
+    // search index so click-throughs work identically.
+    if (r && r.kind && !r.open && !r.session) {
+      const match = index.find((it) => it.kind === r.kind && it.id === r.id);
+      if (match) r = match;
+    }
     if (r.kind === "Session") {
       setDetailSession(r);
       return;
@@ -35839,7 +35899,11 @@ function GlobalSearch({ open, onClose }) {
         padding: view === "typeahead" ? "80px 24px" : "40px 24px",
         fontFamily: "var(--font-sans)",
       }}
-      onClick={() => { if (!detailSession) onClose(); else setDetailSession(null); }}
+      onClick={() => {
+        if (detailSession) { setDetailSession(null); return; }
+        if (view === "results" && pageResults.length > 0) return;
+        onClose();
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -35970,7 +36034,7 @@ function SearchHeader({ inputRef, q, setQ, onKey, view, onSubmit, onBackToTypeah
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={onKey}
-        placeholder="Search sessions, objectives, modules, MEPOs…"
+        placeholder="Search sessions, modules, MEPOs, MLOs…"
         style={{
           flex: 1, fontSize: 14, fontFamily: "var(--font-sans)",
           border: "none", outline: "none", background: "transparent",
@@ -36098,6 +36162,140 @@ function TypeaheadList({ q, results, activeIdx, setActiveIdx, onPick, onSubmit }
 // ---------------------------------------------------------------------------
 // Full results page
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// AskAscendView — natural-language search result body
+// ---------------------------------------------------------------------------
+// Rendered in the GlobalSearch modal when view === "ask". Shows a loading
+// spinner while window.AskAscend.askAscend is in flight, the model's
+// one-sentence summary, then a card per pick with the rationale and an
+// open-row click handler that drops into the regular openItem path.
+// ---------------------------------------------------------------------------
+function AskAscendView({ query, loading, error, result, onOpen, searchIndex }) {
+  if (!query && !loading && !result && !error) {
+    return (
+      <div style={{ padding: "60px 32px", textAlign: "center", color: "var(--grey-11)", fontFamily: "var(--font-sans)" }}>
+        <div style={{ fontSize: 28, marginBottom: 16, color: "var(--brand-cyan-deep)" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" style={{ display: "inline-block" }}>
+            <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+            <path d="M19.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>
+          </svg>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: "var(--ink-1)", marginBottom: 8 }}>Ask ASCEND</div>
+        <div style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 460, margin: "0 auto", color: "var(--grey-11)" }}>
+          Type a natural-language question about the curriculum and press Enter. Examples:
+        </div>
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
+          {[
+            "Where do students learn about nutrition counseling?",
+            "Which sessions teach disease prevention strategies?",
+            "Where is health maintenance covered in Phase 1?",
+            "Show me everything mapped to JAMA nutrition competencies.",
+          ].map((ex) => (
+            <div key={ex} style={{ fontSize: 12.5, color: "var(--ink-2)", padding: "8px 12px", background: "var(--grey-1)", borderRadius: 6, fontStyle: "italic" }}>
+              {ex}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div style={{ padding: "60px 32px", textAlign: "center", color: "var(--grey-11)", fontFamily: "var(--font-sans)" }}>
+        <div style={{ display: "inline-block", width: 28, height: 28, border: "3px solid var(--grey-2)", borderTopColor: "var(--brand-cyan-deep)", borderRadius: "50%", animation: "ask-spin 800ms linear infinite" }}></div>
+        <style>{`@keyframes ask-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <div style={{ marginTop: 14, fontSize: 13 }}>Asking ASCEND…</div>
+        <div style={{ marginTop: 4, fontSize: 11, color: "var(--grey-8)" }}>{query}</div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div style={{ padding: "40px 32px", color: "var(--bad)", fontFamily: "var(--font-sans)" }}>
+        <div style={{ fontWeight: 600, marginBottom: 6 }}>Couldn’t answer that.</div>
+        <div style={{ fontSize: 13, lineHeight: 1.5 }}>{error}</div>
+      </div>
+    );
+  }
+  if (!result) return null;
+  return (
+    <div style={{ padding: "20px 24px", fontFamily: "var(--font-sans)" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand-cyan-deep)", fontWeight: 700, marginBottom: 6 }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+        </svg>
+        Ask ASCEND
+      </div>
+      <div style={{ fontSize: 13, color: "var(--grey-11)", marginBottom: 4 }}>“{query}”</div>
+      {result.summary && (
+        <div style={{ fontSize: 15, color: "var(--ink-1)", lineHeight: 1.5, marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid var(--grey-2)" }}>
+          {result.summary}
+        </div>
+      )}
+      {result.picks && result.picks.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {result.picks.map((p, i) => {
+            // For Session picks, render the rich SessionResultCard used on
+            // the main search results page so the Ask ASCEND view feels
+            // complete (duration, type pill, week, SLO count, methods).
+            // Non-session picks (Module / MEPO / Thread / AOC) keep the
+            // compact card.
+            if (p.kind === "Session" && searchIndex) {
+              const hit = searchIndex.find((it) => it.kind === "Session" && it.id === p.id);
+              if (hit) {
+                const cardItem = { ...hit, jamas: p.jamas, jamaTheme: p.jamaTheme };
+                return (
+                  <div key={p.kind + ":" + p.id + ":" + i}>
+                    <SessionResultCard item={cardItem} rank={i + 1} onOpen={() => onOpen({ ...hit })} />
+                    {/* JAMA + WHY block below the card, sharing its width */}
+                    {(p.jamas && p.jamas.length > 0) ? (
+                      <div style={{ marginTop: 4, marginLeft: 56, marginRight: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+                        {p.jamas && p.jamas.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                            {p.jamas.map((c) => (
+                              <span key={c.n} title={c.text}
+                                className="pill cyan"
+                                style={{ fontSize: 10, padding: "1px 7px", whiteSpace: "nowrap" }}>
+                                JAMA #{c.n}{c.priority ? " ★" : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
+            }
+            return (
+              <button
+                key={p.kind + ":" + p.id + ":" + i}
+                onClick={() => onOpen({ ...p, open: p.open })}
+                style={{
+                  textAlign: "left", padding: "12px 14px",
+                  background: "var(--paper)", border: "1px solid var(--grey-3)", borderRadius: 8,
+                  cursor: "pointer", fontFamily: "var(--font-sans)",
+                  display: "flex", flexDirection: "column", gap: 4,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--grey-1)"; e.currentTarget.style.borderColor = "var(--brand-cyan)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--paper)"; e.currentTarget.style.borderColor = "var(--grey-3)"; }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--grey-11)", fontWeight: 600 }}>{p.kind}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-1)" }}>{p.label}</span>
+                </div>
+                {p.sub && <div style={{ fontSize: 11.5, color: "var(--grey-11)" }}>{p.sub}</div>}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: "var(--grey-11)", fontStyle: "italic" }}>No matches in the curriculum index.</div>
+      )}
+    </div>
+  );
+}
 
 function ResultsPage({ query, results, onOpen }) {
   const [filterKind, setFilterKind] = useStateGS("All");
@@ -36610,7 +36808,7 @@ function VariantA() {
   const mod = C.MODULES.find(m => m.id === moduleId);
   const crumbs = view === "overview"
     ? ["ASCEND Curriculum", "All Modules"]
-    : view === "module" ? ["ASCEND Curriculum", mod.name]
+    : view === "module" ? [{ label: "ASCEND Curriculum", onClick: () => setView("overview") }, mod.name]
     : view === "mlo" ? ["ASCEND Curriculum", mod.name, "MLO Coverage"]
     : view === "mepo" ? ["ASCEND Curriculum", "MEPO Map"]
     : ["ASCEND Curriculum", "Accreditation Export"];
@@ -36667,7 +36865,7 @@ function SideNavA({ view, setView, moduleId, setModuleId }) {
                 onClick={() => { setModuleId(m.id); setView("module"); }}>
                 <PhaseDot phase={m.phase} />
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.short}</span>
-                {m.real && <span className="badge" style={{ background: "var(--brand-cyan-tint)", color: "var(--brand-cyan-deep)" }}>Live</span>}
+                
               </div>
             ))}
           </div>
@@ -36780,8 +36978,7 @@ function OverviewA({ setView, setModuleId }) {
                 <td>
                   <div style={{ fontWeight: 600 }}>{m.name}</div>
                   <div style={{ fontSize: 11, color: "var(--grey-7)" }}>
-                    {m.real ? <span className="pill cyan" style={{ marginRight: 6 }}>Live</span>
-                            : <span className="synth-mark">synthesized</span>} · {m.weeks}w · n={m.cohort}
+                    {!m.real && <span className="synth-mark" style={{ marginRight: 6 }}>synthesized</span>}{m.weeks}w · n={m.cohort}
                   </div>
                 </td>
                 <td>{m.year}</td>
@@ -37445,8 +37642,8 @@ function VariantB() {
   const mod = C.MODULES.find(m => m.id === moduleId) || C.MODULES[0];
 
   const crumbs = view === "outcomes" ? ["Program Objectives"]
-    : view === "outcome" ? ["Program Objectives", mepo.code]
-    : view === "module" ? ["Program Objectives", mepo.code, mod.short]
+    : view === "outcome" ? [{ label: "Program Objectives", onClick: () => setView("outcomes") }, mepo.code]
+    : view === "module" ? [{ label: "Program Objectives", onClick: () => setView("outcomes") }, { label: mepo.code, onClick: () => setView("outcome") }, mod.short]
     : ["Accreditation"];
 
   return (
@@ -38613,7 +38810,17 @@ function VariantD() {
   }
   const leafGroup = leafGroupLabel(leaf);
   const leafCrumb = leaf ? (leafGroup ? `${leafGroup} · ${leaf.label}` : leaf.label) : null;
-  const crumbs = ["ASCEND Curriculum", leafCrumb, activeMod?.short, session?.title].filter(Boolean);
+  // Clickable crumbs:
+  //   "ASCEND Curriculum" → reset leaf to phase root
+  //   <leaf>              → clear active mod + session
+  //   <module short>      → clear session
+  //   <session title>     → terminal, non-clickable
+  const crumbs = [
+    { label: "ASCEND Curriculum", onClick: () => { setLeafId("p1"); setOpenModule(null); setOpenSession(null); } },
+    leafCrumb ? { label: leafCrumb, onClick: () => { setOpenModule(null); setOpenSession(null); } } : null,
+    activeMod ? { label: activeMod.short, onClick: () => setOpenSession(null) } : null,
+    session ? session.title : null,
+  ].filter(Boolean);
   const screenLabel = leaf ? "D · " + (leaf.id) + (session ? " · " + session.id : "") : "D";
 
   function selectLeaf(id) {
@@ -38810,7 +39017,7 @@ function VariantD() {
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 2 }}>
                       {m.year} · {pack ? pack.sessions.length + " sessions" : "session list pending"} · {m.mloCount} MLOs
-                      {m.real && <span className="pill cyan" style={{ marginLeft: 8 }}>Live</span>}
+                      
                     </div>
                   </div>
                   <Pill kind="muted">n={m.cohort}</Pill>
@@ -40016,6 +40223,36 @@ function VariantE() {
   const [filterDuration, setFilterDuration] = useStateE("All");
   const [sortBy, setSortBy] = useStateE("relevance");
   const [selected, setSelected] = useStateE(null);
+  // Ask-ASCEND (natural-language) state — scoped strictly to the elective catalog.
+  // When askResult is set, the rendered list shows the model's picks instead of
+  // the full faceted list.
+  const [askQuery, setAskQuery] = useStateE("");
+  const [askLoading, setAskLoading] = useStateE(false);
+  const [askResult, setAskResult] = useStateE(null);
+  const [askError, setAskError] = useStateE(null);
+  async function runAsk() {
+    const text = (q || "").trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askElectives) {
+      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
+      return;
+    }
+    setAskQuery(text);
+    setAskLoading(true);
+    setAskError(null);
+    setAskResult(null);
+    try {
+      const res = await window.AskAscend.askElectives(text);
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+  function clearAsk() {
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+  }
 
   // Facet values
   const facets = useMemoE(() => {
@@ -40051,6 +40288,7 @@ function VariantE() {
   }, [all]);
 
   const filtered = useMemoE(() => {
+    // Keyword-token filter against title / specialty / type / keywords / sites etc.
     const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
     const matchToken = (e, t) => {
       const hay = [
@@ -40087,7 +40325,7 @@ function VariantE() {
     if (sortBy === "title") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     else if (sortBy === "code") list = [...list].sort((a, b) => a.code.localeCompare(b.code));
     else if (sortBy === "specialty") list = [...list].sort((a, b) => a.specialty.localeCompare(b.specialty) || a.title.localeCompare(b.title));
-    // "relevance" — sheet order
+    // "relevance" — sheet order (or Ask-ASCEND pick order when an NL search is active)
 
     return list;
   }, [all, q, filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration, sortBy]);
@@ -40095,16 +40333,20 @@ function VariantE() {
   const activeFilters = [filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration].filter(v => v !== "All").length + (q ? 1 : 0);
 
   function clearAll() {
-    setQ(""); setFilterSpecialty("All"); setFilterType("All"); setFilterYear("All");
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+    setFilterSpecialty("All"); setFilterType("All"); setFilterYear("All");
     setFilterSetting("All"); setFilterIntensity("All"); setFilterAudition("All"); setFilterSite("All");
     setFilterDuration("All");
   }
 
-  const crumbs = ["Electives", selected ? selected.code : null].filter(Boolean);
+  const crumbs = [
+    selected ? { label: "Electives Catalog", onClick: () => setSelected(null) } : "Electives Catalog",
+    selected ? selected.code : null,
+  ].filter(Boolean);
 
   return (
     <div className="dash" data-screen-label={`E · electives${selected ? " · " + selected.code : ""}`}>
-      <window.Topbar variantLabel="Electives" crumbs={crumbs} />
+      <window.Topbar variantLabel="Electives Catalog" crumbs={crumbs} />
       <div style={{ display: "flex", minHeight: 980 }}>
         {/* Sidebar filters */}
         <div className="sidenav" style={{ width: 240, flex: "0 0 240px" }}>
@@ -40262,7 +40504,7 @@ const TYPE_COLOR = {
   "Non-Clinical":          { bg: "rgba(216,11,140,0.10)", fg: "var(--brand-magenta)" },
 };
 
-function ElectiveCard({ e, active, onOpen }) {
+function ElectiveCard({ e, active, onOpen, reason }) {
   const c = TYPE_COLOR[e.type] || { bg: "var(--grey-2)", fg: "var(--ink-2)" };
   return (
     <button onClick={onOpen}
@@ -40577,7 +40819,7 @@ const LENSES = [
     color: "var(--brand-cyan)", deep: "var(--brand-cyan-deep)", tint: "var(--brand-cyan-tint)" },
   { id: "A", label: "Module Performance",   subtitle: "Exam analytics, item review, and blueprint coverage per module",
     color: "var(--brand-magenta)", deep: "var(--brand-magenta-deep)", tint: "#FBE5F0" },
-  { id: "E", label: "Electives",            subtitle: "Browse the ASCEND career-exploration elective catalog",
+  { id: "E", label: "Electives Catalog",    subtitle: "Browse the ASCEND career-exploration elective catalog",
     color: "var(--good)", deep: "#176D3B", tint: "var(--good-tint)" },
 ];
 
@@ -40977,6 +41219,12 @@ window.CA_DIRECTORY = [
       { name: "Maaike Van Gerwen",      role: "Scientific & Scholarly Discovery · AOC Director" },
       { name: "Krishna Chokshi",        role: "Medical Ethics · Content Director" },
       { name: "Jacqueline Sheehan",     role: "Communication · Content Director" },
+      { name: "Bess Storch",            role: "Evidence-Based Medicine (EBM) · Content Director" },
+      { name: "Lili Chan",              role: "Augmented Intelligence · Content Director" },
+      { name: "Tonia Kim",              role: "Pharmacology · Content Director" },
+      { name: "Cynthia Abraham",        role: "Embryology · Content Director" },
+      { name: "Daniel Caplivski",       role: "Microbiology · Content Director" },
+      { name: "Roberto Posada",         role: "Microbiology · Content Director" },
     ],
   },
 ];
@@ -41188,7 +41436,7 @@ function Segmented({ value, onChange, options }) {
 // ─── Tab bar ──────────────────────────────────────────────────
 function MobileTabBar({ active, onChange, savedCount }) {
   const items = [
-    { id: "search",    label: "ASCEND search",   icon: IconSearch },
+    { id: "search",    label: "ASCEND",   icon: IconSearch },
     { id: "electives", label: "Electives", icon: IconBook },
     { id: "mepo",      label: "CA/MEPO",  icon: IconTarget },
     { id: "saved",     label: "Saved",    icon: IconBookmark, badge: savedCount },
@@ -41226,6 +41474,31 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
     specialty: "All", type: "All", duration: "All", setting: "All",
     intensity: "All", audition: "All", site: "All",
   });
+  // Ask-ASCEND state, scoped strictly to electives.
+  const [askQuery, setAskQuery] = useStateMA("");
+  const [askLoading, setAskLoading] = useStateMA(false);
+  const [askResult, setAskResult] = useStateMA(null);
+  const [askError, setAskError] = useStateMA(null);
+  async function runAsk() {
+    const text = (q || "").trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askElectives) {
+      setAskError("Ask ASCEND not available.");
+      return;
+    }
+    setAskQuery(text); setAskLoading(true); setAskError(null); setAskResult(null);
+    try {
+      const res = await window.AskAscend.askElectives(text);
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+  function clearAsk() {
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+  }
 
   // Bridge for filter sheet → list state
   useEffectMA(() => { window.__mobileFilters = { filters, setFilters }; }, [filters]);
@@ -41279,7 +41552,7 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px 12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
-            <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Electives</div>
+            <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Electives Catalog</div>
           </div>
           <button onClick={() => alert("Profile (stub)")} style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.18)", border: "none", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
             <IconUser size={20} stroke="#fff" sw={2}/>
@@ -41350,7 +41623,7 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 16 }}>
             {filtered.map((e) => (
-              <ElectiveCard key={e.code} e={e} onOpen={() => onOpen(e.code)} saved={savedSet.has(e.code)} onToggleSave={() => onToggleSave(e.code)}/>
+              <ElectiveCard key={e.code} e={e} onOpen={() => onOpen(e.code)} saved={savedSet.has(e.code)} onToggleSave={() => onToggleSave(e.code)} reason={e.why}/>
             ))}
           </div>
         )}
@@ -41397,7 +41670,7 @@ function RemovableChip({ label, onRemove }) {
   );
 }
 
-function ElectiveCard({ e, onOpen, saved, onToggleSave }) {
+function ElectiveCard({ e, onOpen, saved, onToggleSave, reason }) {
   const c = specColor(e.specialty);
   return (
     <div onClick={onOpen}
@@ -41410,7 +41683,7 @@ function ElectiveCard({ e, onOpen, saved, onToggleSave }) {
             {saved ? <IconBookmarkF size={18}/> : <IconBookmark size={18} sw={2}/>}
           </button>
         </div>
-        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.25, marginBottom: 8, color: BRAND.ink }}>{e.title}</div>
+        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.25, marginBottom: 6, color: BRAND.ink }}>{e.title}</div>
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           <Tag color={c}>{e.specialty}</Tag>
           <Tag>{(e.durationOptions || "").replace(/\s/g, "")} wk</Tag>
@@ -41879,22 +42152,28 @@ const BROWSE_HUB = [
   { id: "threads", label: "Curricular Threads", sub: "Longitudinal cross-curriculum threads",
     color: BRAND.cyanDeep, tint: BRAND.cyanTint, glyph: "CT",
     items: [
-      { id: "th-ethics", label: "Medical Ethics",                  sessionsFilter: { keywords: ["ethic", "bioethic"] } },
-      { id: "th-comm",   label: "Communication Skills",            sessionsFilter: { keywords: ["communicat", "interview", "interpersonal", "rapport", "feedback"] } },
-      { id: "th-nutr",   label: "Nutrition",                       sessionsFilter: { keywords: ["nutrition", "diet", "obesity", "metabolic syndrome"] } },
-      { id: "th-ai",     label: "Artificial Intelligence",         sessionsFilter: { keywords: ["artificial intelligence", "machine learning", "\\bAI\\b"] } },
-      { id: "th-pharm",  label: "Pharmacology",                    sessionsFilter: { keywords: ["pharmacolog", "pharmacokinetic", "pharmacodynamic", "pharmacotherap", "drug"] } },
-      { id: "th-physio", label: "Physiology",                      sessionsFilter: { keywords: ["physiolog"] } },
-      { id: "th-embryo", label: "Embryology",                      sessionsFilter: { keywords: ["embryolog", "embryonic", "fetal develop"] } },
-      { id: "th-micro",  label: "Microbiology",                    sessionsFilter: { keywords: ["microbiolog", "bacteri", "virus", "viral", "fungus", "pathogen", "antibiotic", "antimicrobial", "parasite"] } },
-      { id: "th-ebm",    label: "Evidence-Based Medicine (EBM)",   sessionsFilter: { keywords: ["evidence-based", "evidence based", "EBM", "biostatistic", "epidemiolog", "appraisal", "randomized", "clinical trial"] } },
+      { id: "th-ai",     label: "Artificial Intelligence",   sessionsFilter: { threadId: "ai" } },
+      { id: "th-dp",     label: "Disease Prevention",         sessionsFilter: { threadId: "dp" } },
+      { id: "th-embr",   label: "Embryology",                 sessionsFilter: { threadId: "embr" } },
+      { id: "th-hm",     label: "Health Maintenance",         sessionsFilter: { threadId: "hm" } },
+      { id: "th-micro",  label: "Microbiology",               sessionsFilter: { threadId: "micro" } },
+      { id: "th-nutr",   label: "Nutrition",                  sessionsFilter: { threadId: "nutr" } },
+      { id: "th-pharm",  label: "Pharmacology",               sessionsFilter: { threadId: "pharm" } },
+      { id: "th-phys",   label: "Physiology",                 sessionsFilter: { threadId: "phys" } },
     ] },
 ];
 
-function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
-  const [q, setQ] = useStateMA("");
-  const [filter, setFilter] = useStateMA("All"); // All | Session | Module | MEPO | MLO
-  const [navPath, setNavPath] = useStateMA([]);  // stack of browse nodes; [] = hub
+function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, setNavPath, filter, setFilter, askMode, setAskMode, askLoading, askResult, askError, onAsk }) {
+  // q / navPath / filter / askMode controlled by MobileApp so the user's
+  // browse position + Ask-ASCEND answer survives detail-open/close.
+  const [qLocal, setQLocal] = useStateMA("");
+  const [filterLocal, setFilterLocal] = useStateMA("All");
+  const [navPathLocal, setNavPathLocal] = useStateMA([]);
+  const [askModeLocal, setAskModeLocal] = useStateMA(false);
+  if (q === undefined)        { q = qLocal;        setQ = setQLocal; }
+  if (filter === undefined)   { filter = filterLocal;   setFilter = setFilterLocal; }
+  if (navPath === undefined)  { navPath = navPathLocal; setNavPath = setNavPathLocal; }
+  if (askMode === undefined)  { askMode = askModeLocal; setAskMode = setAskModeLocal; }
   const index = useMemoMA(() => buildCurriculumIndex(), []);
 
   const C = window.CURRICULUM;
@@ -41940,6 +42219,11 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
           let match = false;
           if (filter.aoc) {
             match = (s.aoc || "").trim().toUpperCase() === filter.aoc;
+          } else if (filter.threadId) {
+            // Match against the canonical thread tag injected by
+            // injectCanonicalIntoSessions (s.threads is an array of thread
+            // ids the session belongs to per the master curriculum map).
+            match = Array.isArray(s.threads) && s.threads.includes(filter.threadId);
           } else if (filter.keywords) {
             const hay = [s.title, s.methods, s.keywords, s.clinical, s.societal,
                          ...(s.objectives || []).map((o) => o.text)].filter(Boolean).join(" ");
@@ -42043,7 +42327,111 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder }) {
       ) : navPath.length === 0 ? (
         <BrowseHub onOpenTile={openHubTile}/>
       ) : (
-        <BrowseLevel node={currentNode} navPath={navPath} onTap={tapNode} onBack={popNode} onHome={resetNav} nodeChildren={nodeChildren}/>
+        <BrowseLevel node={currentNode} navPath={navPath} onTap={tapNode} onBack={popNode} onHome={resetNav} onJumpTo={(i) => setNavPath((p) => p.slice(0, i + 1))} nodeChildren={nodeChildren}/>
+      )}
+    </div>
+  );
+}
+
+// ─── Ask-ASCEND mobile body ───────────────────────────────────────
+// Mirrors the desktop AskAscendView but in the mobile visual idiom: white
+// cards on the grey app background, picks render as tap-rows that open the
+// shared SearchResultDetail via onOpenSession (the parent maps to onOpenResult).
+function AskAscendMobileView({ q, loading, error, result, onAsk, onOpenSession }) {
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  // Resolve a pick → existing search-index entry so onOpenSession gets the
+  // exact shape SearchResultDetail expects.
+  function openPick(p) {
+    if (!onOpenSession) return;
+    const idx = buildCurriculumIndex();
+    const match = idx.find((it) => it.kind === p.kind && it.id === p.id);
+    if (match) onOpenSession(match);
+  }
+  if (loading) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", padding: "30px 16px", textAlign: "center", color: BRAND.grey11, fontFamily: sans }}>
+        <div style={{ display: "inline-block", width: 28, height: 28, border: "3px solid " + BRAND.grey2, borderTopColor: BRAND.cyanDeep, borderRadius: "50%", animation: "ask-spin 800ms linear infinite" }}></div>
+        <style>{`@keyframes ask-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <div style={{ marginTop: 14, fontSize: 13.5 }}>Asking ASCEND…</div>
+        <div style={{ marginTop: 4, fontSize: 11.5, color: BRAND.grey8, fontStyle: "italic" }}>“{q}”</div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", fontFamily: sans }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: "18px 16px", color: BRAND.bad, fontWeight: 600 }}>Couldn’t answer that.</div>
+        <div style={{ fontSize: 13, color: BRAND.grey11, marginTop: 8, padding: "0 4px" }}>{error}</div>
+      </div>
+    );
+  }
+  if (!result) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", padding: "30px 16px", fontFamily: sans, textAlign: "center" }}>
+        <div style={{ color: BRAND.cyanDeep, fontSize: 28, marginBottom: 12 }}>
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor" style={{ display: "inline-block" }}>
+            <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+            <path d="M19.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>
+          </svg>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: BRAND.ink, marginBottom: 8 }}>Ask ASCEND</div>
+        <div style={{ fontSize: 13, color: BRAND.grey11, lineHeight: 1.55, maxWidth: 320, margin: "0 auto" }}>
+          Type a question and tap Enter / Send. Examples:
+        </div>
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6, maxWidth: 320, margin: "14px auto 0", textAlign: "left" }}>
+          {[
+            "Where do students learn about nutrition counseling?",
+            "Which sessions teach disease prevention strategies?",
+            "Where is health maintenance covered in Phase 1?",
+          ].map((ex) => (
+            <button key={ex} onClick={() => onAsk && onAsk(ex)}
+              style={{ background: "#fff", border: "1px solid " + BRAND.grey2, borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: BRAND.ink2, fontStyle: "italic", textAlign: "left", cursor: "pointer", fontFamily: sans }}>
+              {ex}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px 18px", fontFamily: sans }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: BRAND.cyanDeep, fontWeight: 700, marginBottom: 6, padding: "0 4px" }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/></svg>
+        Ask ASCEND
+      </div>
+      <div style={{ fontSize: 12.5, color: BRAND.grey11, marginBottom: 4, padding: "0 4px" }}>“{q}”</div>
+      {result.summary && (
+        <div style={{ background: "#fff", borderRadius: 12, padding: "14px 14px", fontSize: 14, color: BRAND.ink, lineHeight: 1.5, marginBottom: 12 }}>
+          {result.summary}
+        </div>
+      )}
+      {result.picks && result.picks.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {result.picks.map((p, i) => (
+            <button key={p.kind + ":" + p.id + ":" + i} onClick={() => openPick(p)}
+              style={{ background: "#fff", border: "1px solid " + BRAND.grey2, borderRadius: 12, padding: "12px 14px", textAlign: "left", cursor: "pointer", fontFamily: sans, display: "flex", flexDirection: "column", gap: 4, WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: BRAND.grey11, fontWeight: 700 }}>{p.kind}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: p.kind === "Session" ? (BRAND.sessionTitle || "#0B3B7A") : BRAND.ink, lineHeight: 1.3 }}>{p.label}</span>
+              </div>
+              {p.sub && <div style={{ fontSize: 11.5, color: BRAND.grey11 }}>{p.sub}</div>}
+              {p.jamas && p.jamas.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                  {p.jamas.map((c) => (
+                    <span key={c.n} title={c.text}
+                      style={{ fontSize: 9.5, padding: "1px 6px", borderRadius: 3,
+                        background: BRAND.cyanTint, border: "1px solid " + BRAND.cyan,
+                        color: BRAND.cyanDeep, fontWeight: 600, whiteSpace: "nowrap" }}>
+                      JAMA #{c.n}{c.priority ? " ★" : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: BRAND.grey11, fontStyle: "italic", padding: "0 4px" }}>No matches in the curriculum index.</div>
       )}
     </div>
   );
@@ -42073,7 +42461,7 @@ function BrowseHub({ onOpenTile }) {
   );
 }
 
-function BrowseLevel({ node, navPath, onTap, onBack, onHome, nodeChildren }) {
+function BrowseLevel({ node, navPath, onTap, onBack, onHome, onJumpTo, nodeChildren }) {
   const items = nodeChildren(node);
   return (
     <>
@@ -42084,12 +42472,23 @@ function BrowseLevel({ node, navPath, onTap, onBack, onHome, nodeChildren }) {
         </button>
         <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: BRAND.ink, display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
           <button onClick={onHome} style={{ background: "transparent", border: "none", color: BRAND.cyan, padding: 0, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>Browse</button>
-          {navPath.map((n, i) => (
-            <span key={n.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-              <IconChevR size={11} stroke={BRAND.grey3} sw={2.6}/>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: i === navPath.length - 1 ? BRAND.ink : BRAND.grey11, fontWeight: i === navPath.length - 1 ? 600 : 500 }}>{n.label}</span>
-            </span>
-          ))}
+          {navPath.map((n, i) => {
+            const isLast = i === navPath.length - 1;
+            const jump = !isLast && onJumpTo ? () => onJumpTo(i) : null;
+            return (
+              <span key={n.id} style={{ display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}>
+                <IconChevR size={11} stroke={BRAND.grey3} sw={2.6}/>
+                {jump ? (
+                  <button onClick={jump}
+                    style={{ background: "transparent", border: "none", padding: 0, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: BRAND.cyan, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    {n.label}
+                  </button>
+                ) : (
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: BRAND.ink, fontWeight: 600 }}>{n.label}</span>
+                )}
+              </span>
+            );
+          })}
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px 18px", WebkitOverflowScrolling: "touch" }}>
@@ -42364,7 +42763,7 @@ function SessionDetailBody({ item, onOpenItem }) {
       )}
 
       {alignedMepoList.length > 0 && (
-        <InfoBlock label={"Aligned MEPOs · " + alignedMepoList.length}>
+        <CollapsibleInfoBlock label={"Aligned MEPOs · " + alignedMepoList.length} count={alignedMepoList.length} defaultOpen={false}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 6 }}>
             {alignedMepoList.map((code) => {
               const me = mepoMeta[code];
@@ -42376,7 +42775,7 @@ function SessionDetailBody({ item, onOpenItem }) {
               );
             })}
           </div>
-        </InfoBlock>
+        </CollapsibleInfoBlock>
       )}
 
       {/* JAMA Nutrition Competencies — joined via window.jamaForSession;
@@ -42814,6 +43213,40 @@ function MobileApp() {
   const [savedSet, setSavedSet] = useStateMA(loadSaved());
   const [refreshNonce, setRefreshNonce] = useStateMA(0);
 
+  // Search/browse state lifted out of CurriculumSearch so it survives when
+  // MobileApp swaps in a SearchResultDetail and back. Without this, opening a
+  // session from Curricular Threads then hitting Back would unmount the search
+  // component and the user would land back on the browse hub.
+  const [searchQ, setSearchQ] = useStateMA("");
+  const [searchNavPath, setSearchNavPath] = useStateMA([]);
+  const [searchFilter, setSearchFilter] = useStateMA("All");
+
+  // Ask-ASCEND state — lifted for the same reason: a user can open a session
+  // from a natural-language pick, then hit back, and expect to see the same
+  // answer list rather than landing on the search hub.
+  const [askMode, setAskMode] = useStateMA(false);
+  const [askLoading, setAskLoading] = useStateMA(false);
+  const [askResult, setAskResult] = useStateMA(null);
+  const [askError, setAskError] = useStateMA(null);
+  async function runAsk(query) {
+    const text = (query || "").trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askAscend) {
+      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
+      return;
+    }
+    setAskLoading(true); setAskError(null); setAskResult(null);
+    try {
+      const audience = window.STUDENT_VIEW ? "student" : "both";
+      const res = await window.AskAscend.askAscend(text, { audience });
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+
   function toggleSave(code) {
     setSavedSet((prev) => {
       const next = new Set(prev);
@@ -42838,6 +43271,15 @@ function MobileApp() {
     setDetailCode(null);
     setResultStack([]);
     setPlaceholder(null);
+    // Clear search state when leaving / re-entering the search tab so the
+    // user lands on a fresh search root (only when switching away from it).
+    if (next !== "search") {
+      setSearchQ("");
+      setSearchNavPath([]);
+      setAskMode(false);
+      setAskResult(null);
+      setAskError(null);
+    }
   }
 
   function openMepoFromList(me) {
@@ -42864,7 +43306,14 @@ function MobileApp() {
       </PullToRefresh>
     );
   } else if (tab === "search") {
-    body = <CurriculumSearch onOpenResult={pushResult} onOpenPlaceholder={(p) => setPlaceholder(p)}/>;
+    body = <CurriculumSearch
+      q={searchQ} setQ={setSearchQ}
+      navPath={searchNavPath} setNavPath={setSearchNavPath}
+      filter={searchFilter} setFilter={setSearchFilter}
+      askMode={askMode} setAskMode={setAskMode}
+      askLoading={askLoading} askResult={askResult} askError={askError}
+      onAsk={runAsk}
+      onOpenResult={pushResult} onOpenPlaceholder={(p) => setPlaceholder(p)}/>;
   } else if (tab === "saved") {
     body = <SavedList savedSet={savedSet} onOpen={(code) => setDetailCode(code)} onToggleSave={toggleSave} onGoBrowse={() => switchTab("electives")}/>;
   } else if (tab === "mepo") {
@@ -42926,6 +43375,6 @@ function StudentsRouter() {
 ReactDOM.createRoot(document.getElementById("root")).render(<StudentsRouter />);
 
 </script>
-<script type="text/babel" data-presets="env,react" src="../related-sessions.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="related-sessions.js"></script>
 </body>
 </html>
