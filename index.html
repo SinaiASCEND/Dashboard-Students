@@ -43027,9 +43027,9 @@ function MobileCalendarTab() {
     if (p.shape === "diamond") {
       // Rotated square — needs an inner wrapper for un-rotated text.
       return (
-        <span style={{ display: "inline-grid", placeItems: "center", width: 22, height: 22, flexShrink: 0 }}>
-          <span style={{ width: 16, height: 16, background: p.bg, border: "1.5px solid " + p.color, transform: "rotate(45deg)", borderRadius: 2 }}/>
-          <span style={{ position: "absolute", fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: 0.2 }}>{cls}</span>
+        <span style={{ position: "relative", display: "inline-grid", placeItems: "center", width: 22, height: 22, flexShrink: 0 }}>
+          <span style={{ gridArea: "1 / 1", width: 16, height: 16, background: p.bg, border: "1.5px solid " + p.color, transform: "rotate(45deg)", borderRadius: 2 }}/>
+          <span style={{ gridArea: "1 / 1", fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: 0.2, lineHeight: 1 }}>{cls}</span>
         </span>
       );
     }
@@ -43103,6 +43103,13 @@ function MobileCalendarTab() {
     if (!end || end === start) return "";
     const a = fmtDate(start), b = fmtDate(end);
     return ` → ${b.day}`;
+  }
+  function fmtMonth(key) {
+    // key is "YYYY-MM"
+    const [y, mo] = key.split("-").map(Number);
+    return new Date(y, mo - 1, 1)
+      .toLocaleString(undefined, { month: "long", year: "numeric" })
+      .toUpperCase();
   }
 
   return (
@@ -43537,7 +43544,7 @@ function MobileApp() {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: BRAND.bg, overflow: "hidden", position: "relative" }}>
-      <div style={{ position: "absolute", inset: 0, paddingBottom: "calc(env(safe-area-inset-bottom, 18px) + 56px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, paddingBottom: "calc(env(safe-area-inset-bottom, 18px) + 64px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ flex: 1, minHeight: 0, position: "relative", display: "flex", flexDirection: "column" }}>{body}</div>
       </div>
       <MobileTabBar active={tab} onChange={switchTab} savedCount={savedSet.size}/>
