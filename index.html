@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=1480" />
-<script>(function(){try{if(window.screen&&window.screen.width<768){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=device-width, initial-scale=1, viewport-fit=cover');}}catch(e){}})();</script>
-<title>ASCEND Curriculum</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1480" />
+  <script>(function(){try{if(window.screen&&window.screen.width<768){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=device-width, initial-scale=1, viewport-fit=cover');}}catch(e){}})();</script>
+  <title>Curriculum Dashboard — View only</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
 /* Curriculum Dashboard — shared styles
    Brand: Cyan #00AEEF primary, Magenta #D80B8C CTA, Violet #221F72 (sparingly), Cool Grey 11 #58595B
 */
@@ -254,21 +254,21 @@ hr.sep { border: 0; border-top: 1px solid var(--grey-3); margin: 16px 0; }
 .phase-Longitudinal{ --phase: var(--grey-11); }
 .phase-Clerkship   { --phase: var(--brand-magenta); }
 
-</style>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="canonical-threads.js"></script>
-<script src="canonical-aocs.js"></script>
-<script src="jama-nutr-competencies.js"></script>
-<script src="ask-ascend.js"></script>
-<script src="academic-calendar.js"></script>
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="canonical-threads.js"></script>
+  <script src="canonical-aocs.js"></script>
+  <script src="jama-nutr-competencies.js"></script>
+  <script src="ask-ascend.js"></script>
+  <script src="academic-calendar.js"></script>
 </head>
 <body>
-<div id="root"></div>
-<script>window.READ_ONLY = true; window.STUDENT_VIEW = true;</script>
-<script>
+  <div id="root"></div>
+  <script>window.READ_ONLY = true; window.DASHBOARD_LABEL = "Curriculum Dashboard";</script>
+  <script>
 
 // ──── real-modules.js ────
 ;(function(){
@@ -31922,7 +31922,7 @@ window.CURRICULUM = (function() {
     };
   }
 
-  // ---------- MEPOs (program objectives) — canonical 23 from institutional source doc ----------
+  // ---------- MEPOs (program outcomes) — canonical 23 from institutional source doc ----------
   // window.CANONICAL_MEPOS is loaded by canonical-mepos.js. Each item: {n, domainCode, domain, title}.
   // We expose them as MEPOS with `code` derived from n (e.g. "MEPO 1", "MEPO 8") so the rest of the
   // app's existing string-keyed code keeps working.
@@ -32363,20 +32363,16 @@ window.SESSIONS = (function() {
 // ============================================================================
 // Inject canonical AOC + Thread sessions into window.SESSIONS
 // ----------------------------------------------------------------------------
-// The Phase 1 master curriculum map carries audit lists (AOC-HDS, AOC-SSD,
-// AOC-LPI, THREAD-*) whose Phase 1 entries should appear directly in each
-// module's session list — not as a separate "audit roster". This pass walks
-// the canonical lists, finds-or-creates a session record on the live module,
-// and tags it with `.aoc` / `.aocSubdomain` and a `.threads` array. Modules
-// that don't yet have a session pack (e.g. BaseCamp) get an empty pack
-// scaffolded so their canonical sessions can be displayed.
+// Same logic as students/index.html — walks window.CANONICAL_AOCS and
+// window.CANONICAL_THREADS and finds-or-creates a session record on the live
+// module, tagging it with `.aoc` / `.aocSubdomain` / `.threads`. Scaffolds a
+// BaseCamp module so its canonical sessions can land.
 // ============================================================================
 (function injectCanonicalIntoSessions() {
   const C = window.CURRICULUM;
   const S = window.SESSIONS;
   if (!C || !S) return;
 
-  // 1. Scaffold a BaseCamp module so canonical BaseCamp entries can land.
   if (!C.MODULES.find(m => m.id === "basecamp")) {
     C.MODULES.push({
       id: "basecamp", name: "BaseCamp", short: "BaseCamp",
@@ -32389,13 +32385,11 @@ window.SESSIONS = (function() {
     if (!modId) return null;
     if (!S[modId]) S[modId] = { sessions: [], mlos: [], pack: null };
     const pack = S[modId];
-    // Try to find by session number first; fall back to title match.
     let existing = null;
     if (Number.isFinite(n)) existing = (pack.sessions || []).find(s => s.n === n);
     if (!existing) existing = (pack.sessions || []).find(s =>
       (s.title || "").trim().toLowerCase() === (name || "").trim().toLowerCase());
     if (existing) return existing;
-    // Create a new synthetic session.
     const synthN = Number.isFinite(n) ? n : ((pack.sessions || []).reduce((m, s) => Math.max(m, s.n || 0), 0) + 1);
     const fresh = {
       id: `${modId}-s${synthN}`,
@@ -32408,23 +32402,15 @@ window.SESSIONS = (function() {
       methods: opts.methods || "",
       duration: opts.duration || 60,
       objectives: opts.objectives || [],
-      keywords: "",
-      clinical: "",
-      societal: "",
-      mlos: [],
-      mepo: [],
-      aoc: null,
-      aocSubdomain: "",
-      threads: [],
+      keywords: "", clinical: "", societal: "",
+      mlos: [], mepo: [],
+      aoc: null, aocSubdomain: "", threads: [],
       placeholder: true,
     };
     pack.sessions.push(fresh);
     return fresh;
   }
 
-  // 2. AOC injection — for each canonical AOC entry with a modId, ensure the
-  // session exists and stamp `.aoc` / `.aocSubdomain` on it. SLO from the audit
-  // sheet becomes the session's first objective when nothing is set yet.
   for (const aocPack of (window.CANONICAL_AOCS || [])) {
     for (const e of (aocPack.sessions || [])) {
       if (!e.modId) continue;
@@ -32432,14 +32418,11 @@ window.SESSIONS = (function() {
         objectives: e.slo ? [{ slo: e.slo, mlos: [] }] : [],
       });
       if (!s) continue;
-      // Tag with AOC code if not already set, or upgrade if previously blank
       if (!s.aoc) s.aoc = aocPack.code;
       if (!s.aocSubdomain && e.sub) s.aocSubdomain = e.sub;
     }
   }
 
-  // 3. Thread injection — ensure each canonical thread session exists in the
-  // live module pack and tag it with the thread id.
   for (const threadPack of (window.CANONICAL_THREADS || [])) {
     for (const e of (threadPack.sessions || [])) {
       if (!e.modId) continue;
@@ -32452,8 +32435,6 @@ window.SESSIONS = (function() {
 })();
 
 })();
-
-// ──── electives-data.js ────
 ;(function(){
 // AUTO-GENERATED from uploads/electives_catalog.xlsx — DO NOT EDIT BY HAND
 // ASCEND Electives Catalog — AY 2026-27
@@ -34442,44 +34423,8 @@ window.ELECTIVES_LEGEND = [
 
 })();
 
-</script>
-<script type="text/babel" data-presets="env,react">
-
-// Display label for a phase. The data key stays "Systems" everywhere in
-// CURRICULUM.MODULES / filters / map keys, but the UI now reads
-// "Organ Systems" per faculty preference. Use this for any visible
-// rendering of a phase string. Defined at babel-script top level so every
-// IIFE-wrapped variant script can reach it via closure.
-function phaseLabel(p) {
-  return p === "Systems" ? "Organ Systems" : (p || "");
-}
-window.phaseLabel = phaseLabel;
-
-// Short instructional-method code rendered in session-type pills + chips.
-// Maps the coarse classifier output (Lecture / Lab / Small Group / …) to
-// 3-letter codes (LEC / LAB / CCSG / SGD / ACS / PTP / TBL / Sim / CLN / SP /
-// IND / VID). Discussion and Small-Group sessions get module-context-aware
-// codes: ACS in Anatomy, CCSG in other Foundations / Organ Systems modules,
-// SGD elsewhere.
-function shortTypeCode(type, modId, modPhase) {
-  if (!type) return "";
-  if (type === "Lecture")     return "LEC";
-  if (type === "Lab")         return "LAB";
-  if (type === "Case Conf")   return "PTP";
-  if (type === "TBL")         return "TBL";
-  if (type === "Simulation")  return "Sim";
-  if (type === "Clinical")    return "CLN";
-  if (type === "SP")          return "SP";
-  if (type === "Self-study")  return "IND";
-  if (type === "Video")       return "VID";
-  if (type === "Small Group" || type === "Discussion") {
-    if (modId === "anat") return "ACS";
-    if (modPhase === "Foundations" || modPhase === "Systems") return "CCSG";
-    return "SGD";
-  }
-  return type;
-}
-window.shortTypeCode = shortTypeCode;
+  </script>
+  <script type="text/babel" data-presets="env,react">
 
 // ──── tweaks-panel.jsx ────
 ;(function(){
@@ -34985,9 +34930,17 @@ function PhaseDot({ phase }) {
 function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
   const ROLES = roles || ["Director", "Dean", "Committee"];
   const lens = (typeof window !== "undefined" && window.CURRENT_LENS) || null;
-  const accent = lens?.color || "var(--brand-cyan)";
-  const accentDeep = lens?.deep || "var(--brand-cyan-deep)";
-  const accentTint = lens?.tint || "var(--brand-cyan-tint)";
+  // Directors dashboard uses fuchsia for the topbar accent + wordmark so it's
+  // visually distinct from the student dashboard (which uses brand-cyan).
+  // The fuchsia overrides ONLY when no lens is active (lens accents still
+  // win when the user drills into a specific lens).
+  const IS_DIRECTORS_DASH = typeof window !== "undefined" && window.DASHBOARD_LABEL === "Curriculum Dashboard";
+  const fuchsia      = "#C026D3";
+  const fuchsiaDeep  = "#86198F";
+  const fuchsiaTint  = "#FAE8FF";
+  const accent     = lens?.color || (IS_DIRECTORS_DASH ? fuchsia     : "var(--brand-cyan)");
+  const accentDeep = lens?.deep  || (IS_DIRECTORS_DASH ? fuchsiaDeep : "var(--brand-cyan-deep)");
+  const accentTint = lens?.tint  || (IS_DIRECTORS_DASH ? fuchsiaTint : "var(--brand-cyan-tint)");
   return (
     <div className="topbar" style={{ borderTop: `3px solid ${accent}` }}>
       <div className="logo">
@@ -34997,9 +34950,8 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
       <div className="crumbs">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
-          const isObj = c && typeof c === "object";
-          const label = isObj ? c.label : c;
-          const onClick = isObj ? c.onClick : null;
+          const label = typeof c === "string" ? c : (c && c.label) || "";
+          const onClick = typeof c === "object" && c ? c.onClick : null;
           const clickable = !!onClick && !isLast;
           return (
             <React.Fragment key={i}>
@@ -35010,18 +34962,12 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
                   background: accentTint, padding: "2px 8px", borderRadius: 4,
                 }}>{label}</span>
               ) : clickable ? (
-                <button
-                  type="button"
-                  onClick={onClick}
-                  style={{
-                    color: "var(--grey-11)", background: "transparent", border: "none",
-                    padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline",
-                    textUnderlineOffset: 2, textDecorationColor: "transparent",
-                    transition: "text-decoration-color 120ms, color 120ms",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = accentDeep; e.currentTarget.style.textDecorationColor = accentDeep; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--grey-11)"; e.currentTarget.style.textDecorationColor = "transparent"; }}
-                >{label}</button>
+                <button onClick={onClick}
+                        style={{ background: "transparent", border: "none", padding: 0, fontFamily: "inherit", fontSize: "inherit", color: accentDeep, fontWeight: 600, cursor: "pointer", textDecoration: "none" }}
+                        onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
+                        onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}>
+                  {label}
+                </button>
               ) : (
                 <span style={{ color: "var(--grey-11)" }}>{label}</span>
               )}
@@ -35500,7 +35446,7 @@ function ManageDataPanel({ open, onClose }) {
             {grouped.map(({ phase, mods }) => (
               <div key={phase} style={{ marginBottom: 18 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "var(--grey-11)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
-                  {phaseLabel(phase)}
+                  {phase}
                 </div>
                 <div style={{ border: "1px solid var(--grey-3)", borderRadius: 6, overflow: "hidden" }}>
                   {mods.map((m, i) => {
@@ -35682,7 +35628,7 @@ function buildSearchIndex() {
     idx.push({
       kind: "Module", id: m.id,
       title: m.short, sub: m.name,
-      meta: `${m.year} · ${phaseLabel(m.phase)} · ${m.weeks}w`,
+      meta: `${m.year} · ${m.phase} · ${m.weeks}w`,
       haystack: [m.id, m.short, m.name, m.phase, m.year].join(" ").toLowerCase(),
       open: () => window.APP_NAV?.openModule({ moduleId: m.id }),
     });
@@ -35771,17 +35717,17 @@ const KIND_COLORS = {
 
 // Coarse type pill colors (mirrors variant-d).
 const TYPE_PILL = {
-  "Lecture":     { kind: "muted",  label: "LEC" },
-  "Lab":         { kind: "violet", label: "LAB" },
-  "Small Group": { kind: "cyan",   label: "SGD" },
-  "Discussion":  { kind: "cyan",   label: "SGD" },
+  "Lecture":     { kind: "muted",  label: "Lecture" },
+  "Lab":         { kind: "violet", label: "Lab" },
+  "Small Group": { kind: "cyan",   label: "Small Group" },
+  "Discussion":  { kind: "cyan",   label: "Discussion" },
   "TBL":         { kind: "good",   label: "TBL" },
-  "Simulation":  { kind: "amber",  label: "Sim" },
-  "Clinical":    { kind: "amber",  label: "CLN" },
-  "SP":          { kind: "amber",  label: "SP" },
-  "Case Conf":   { kind: "violet", label: "PTP" },
-  "Self-study":  { kind: "muted",  label: "IND" },
-  "Video":       { kind: "muted",  label: "VID" },
+  "Simulation":  { kind: "amber",  label: "Simulation" },
+  "Clinical":    { kind: "amber",  label: "Clinical" },
+  "SP":          { kind: "amber",  label: "SP encounter" },
+  "Case Conf":   { kind: "violet", label: "Case Conf" },
+  "Self-study":  { kind: "muted",  label: "Self-study" },
+  "Video":       { kind: "muted",  label: "Video" },
   "Other":       { kind: "muted",  label: "Other" },
 };
 
@@ -35792,13 +35738,12 @@ const TYPE_PILL = {
 function GlobalSearch({ open, onClose }) {
   const [q, setQ] = useStateGS("");
   const [committedQ, setCommittedQ] = useStateGS(""); // what's actually showing on results page
-  const [view, setView] = useStateGS("typeahead");    // "typeahead" | "results"
+  const [view, setView] = useStateGS("ask");          // Locked to "ask" — keyword mode retired
   const [activeIdx, setActiveIdx] = useStateGS(0);
-  const [detailSession, setDetailSession] = useStateGS(null); // result item for opened session
-  // Ask-ASCEND (natural-language) state
-  const [askMode, setAskMode] = useStateGS(false);
+  const [detailSession, setDetailSession] = useStateGS(null);
+  const [askMode, setAskMode] = useStateGS(true);
   const [askLoading, setAskLoading] = useStateGS(false);
-  const [askResult, setAskResult] = useStateGS(null);  // { summary, picks: [...] } or null
+  const [askResult, setAskResult] = useStateGS(null);
   const [askError, setAskError] = useStateGS(null);
   const inputRef = useRefGS(null);
 
@@ -35812,10 +35757,10 @@ function GlobalSearch({ open, onClose }) {
     if (open) {
       setQ("");
       setCommittedQ("");
-      setView("typeahead");
+      setView("ask");
       setActiveIdx(0);
       setDetailSession(null);
-      setAskMode(false);
+      setAskMode(true);
       setAskResult(null);
       setAskError(null);
       setAskLoading(false);
@@ -35833,8 +35778,6 @@ function GlobalSearch({ open, onClose }) {
     setDetailSession(null);
   }
 
-  // Run an Ask-ASCEND natural-language query. Audience is inferred from the
-  // dashboard variant (STUDENT_VIEW flag), defaulting to "both" on directors.
   async function runAsk(query) {
     const text = (query ?? q).trim();
     if (!text) return;
@@ -35874,10 +35817,6 @@ function GlobalSearch({ open, onClose }) {
   }
 
   function openItem(r) {
-    // Ask ASCEND picks come pre-hydrated from window.AskAscend (with modId,
-    // sessionN, kind, id) but without the `open` callback or full `session`
-    // reference the detail overlay needs. Resolve against the existing
-    // search index so click-throughs work identically.
     if (r && r.kind && !r.open && !r.session) {
       const match = index.find((it) => it.kind === r.kind && it.id === r.id);
       if (match) r = match;
@@ -35921,8 +35860,10 @@ function GlobalSearch({ open, onClose }) {
           q={q} setQ={setQ}
           onKey={onKeyTypeahead}
           view={view}
-          onSubmit={() => commitSearch()}
-          onBackToTypeahead={() => { setView("typeahead"); setDetailSession(null); setTimeout(() => inputRef.current?.focus(), 30); }}
+          askMode={askMode}
+          /* onToggleAsk omitted — Ask ASCEND is the only mode */
+          onSubmit={() => askMode ? runAsk() : commitSearch()}
+          onBackToTypeahead={() => { setView("typeahead"); setDetailSession(null); setAskResult(null); setAskError(null); setTimeout(() => inputRef.current?.focus(), 30); }}
           onClose={onClose}
         />
 
@@ -35953,6 +35894,17 @@ function GlobalSearch({ open, onClose }) {
               query={committedQ}
               results={pageResults}
               onOpen={openItem}
+            />
+          )}
+
+          {view === "ask" && (
+            <AskAscendView
+              query={committedQ || q}
+              loading={askLoading}
+              error={askError}
+              result={askResult}
+              onOpen={openItem}
+              searchIndex={index}
             />
           )}
         </div>
@@ -36167,11 +36119,6 @@ function TypeaheadList({ q, results, activeIdx, setActiveIdx, onPick, onSubmit }
 // ---------------------------------------------------------------------------
 // AskAscendView — natural-language search result body
 // ---------------------------------------------------------------------------
-// Rendered in the GlobalSearch modal when view === "ask". Shows a loading
-// spinner while window.AskAscend.askAscend is in flight, the model's
-// one-sentence summary, then a card per pick with the rationale and an
-// open-row click handler that drops into the regular openItem path.
-// ---------------------------------------------------------------------------
 function AskAscendView({ query, loading, error, result, onOpen, searchIndex }) {
   if (!query && !loading && !result && !error) {
     return (
@@ -36237,11 +36184,6 @@ function AskAscendView({ query, loading, error, result, onOpen, searchIndex }) {
       {result.picks && result.picks.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {result.picks.map((p, i) => {
-            // For Session picks, render the rich SessionResultCard used on
-            // the main search results page so the Ask ASCEND view feels
-            // complete (duration, type pill, week, SLO count, methods).
-            // Non-session picks (Module / MEPO / Thread / AOC) keep the
-            // compact card.
             if (p.kind === "Session" && searchIndex) {
               const hit = searchIndex.find((it) => it.kind === "Session" && it.id === p.id);
               if (hit) {
@@ -36249,7 +36191,6 @@ function AskAscendView({ query, loading, error, result, onOpen, searchIndex }) {
                 return (
                   <div key={p.kind + ":" + p.id + ":" + i}>
                     <SessionResultCard item={cardItem} rank={i + 1} onOpen={() => onOpen({ ...hit })} />
-                    {/* JAMA + WHY block below the card, sharing its width */}
                     {(p.jamas && p.jamas.length > 0) ? (
                       <div style={{ marginTop: 4, marginLeft: 56, marginRight: 16, display: "flex", flexDirection: "column", gap: 5 }}>
                         {p.jamas && p.jamas.length > 0 && (
@@ -36416,7 +36357,7 @@ function ResultsPage({ query, results, onOpen }) {
             Filter sessions
           </span>
           <ResultsFilterSelect label="Module" value={filterModule} options={facets.modules} onChange={setFilterModule} />
-          <ResultsFilterSelect label="Phase" value={filterPhase} options={facets.phases.map(p => [p, phaseLabel(p)])} onChange={setFilterPhase} />
+          <ResultsFilterSelect label="Phase" value={filterPhase} options={facets.phases.map(p => [p, p])} onChange={setFilterPhase} />
           <ResultsFilterSelect label="Type" value={filterType} options={facets.types.map(t => [t, t])} onChange={setFilterType} />
           <ResultsFilterSelect label="Week" value={filterWeek} options={facets.weeks.map(w => [String(w), `Week ${w}`])} onChange={setFilterWeek} />
           {sessionFilterActive && (
@@ -36467,7 +36408,7 @@ function ResultsPage({ query, results, onOpen }) {
       )}
 
       {showMepos && mepos.length > 0 && (
-        <ResultsSection title="Program Objectives (MEPOs)" count={mepos.length}>
+        <ResultsSection title="Program Outcomes (MEPOs)" count={mepos.length}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
             {mepos.map((r) => (
               <SmallResultCard key={r.id} item={r} onOpen={() => onOpen(r)} accent="var(--violet)" />
@@ -36810,9 +36751,9 @@ function VariantA() {
   const crumbs = view === "overview"
     ? ["ASCEND Curriculum", "All Modules"]
     : view === "module" ? [{ label: "ASCEND Curriculum", onClick: () => setView("overview") }, mod.name]
-    : view === "mlo" ? ["ASCEND Curriculum", mod.name, "MLO Coverage"]
-    : view === "mepo" ? ["ASCEND Curriculum", "MEPO Map"]
-    : ["ASCEND Curriculum", "Accreditation Export"];
+    : view === "mlo" ? [{ label: "ASCEND Curriculum", onClick: () => setView("overview") }, { label: mod.name, onClick: () => setView("module") }, "MLO Coverage"]
+    : view === "mepo" ? [{ label: "ASCEND Curriculum", onClick: () => setView("overview") }, "MEPO Map"]
+    : [{ label: "ASCEND Curriculum", onClick: () => setView("overview") }, "Accreditation Export"];
 
   return (
     <div className="dash" data-screen-label={`A · ${view}`}>
@@ -36835,8 +36776,8 @@ function SideNavA({ view, setView, moduleId, setModuleId }) {
   const C = window.CURRICULUM;
   const groups = [
     { label: "M1 — Foundations", filter: m => m.year === "M1" && m.phase === "Foundations" },
-    { label: "M1 — Organ Systems",     filter: m => m.year === "M1" && m.phase === "Systems" },
-    { label: "M2 — Organ Systems",     filter: m => m.year === "M2" && m.phase === "Systems" },
+    { label: "M1 — Systems",     filter: m => m.year === "M1" && m.phase === "Systems" },
+    { label: "M2 — Systems",     filter: m => m.year === "M2" && m.phase === "Systems" },
     { label: "Longitudinal",     filter: m => m.phase === "Longitudinal" },
     { label: "Capstone",         filter: m => m.phase === "Capstone" },
   ];
@@ -36913,37 +36854,6 @@ function OverviewA({ setView, setModuleId }) {
         </div>
       </div>
 
-      <div className="grid-12">
-        <div className="card" style={{ gridColumn: "span 3" }}>
-          <div className="kpi">
-            <div className="kpi-label">Curriculum Mean</div>
-            <div className="kpi-value t-num">{(overall.mean * 100).toFixed(1)}<span className="unit">%</span></div>
-            <div className="kpi-delta good">▲ 1.2 pt vs prior cycle</div>
-          </div>
-        </div>
-        <div className="card" style={{ gridColumn: "span 3" }}>
-          <div className="kpi">
-            <div className="kpi-label">Items Flagged</div>
-            <div className="kpi-value t-num">{overall.flagged}</div>
-            <div className="kpi-delta">across 18 modules · review queue</div>
-          </div>
-        </div>
-        <div className="card" style={{ gridColumn: "span 3" }}>
-          <div className="kpi">
-            <div className="kpi-label">Blueprint Coverage</div>
-            <div className="kpi-value t-num">{(overall.cov * 100).toFixed(0)}<span className="unit">%</span></div>
-            <div className="kpi-delta">avg. across MLOs assessable by MCQ</div>
-          </div>
-        </div>
-        <div className="card" style={{ gridColumn: "span 3" }}>
-          <div className="kpi">
-            <div className="kpi-label">Reports Available</div>
-            <div className="kpi-value t-num">{1 + (window.CURRICULUM.REAL ? Object.keys(window.CURRICULUM.REAL).length : 0)}<span className="unit">/18</span></div>
-            <div className="kpi-delta">Anatomy{window.CURRICULUM.REAL && Object.keys(window.CURRICULUM.REAL).length ? ` · +${Object.keys(window.CURRICULUM.REAL).length} ingested` : " · others pending"}</div>
-          </div>
-        </div>
-      </div>
-
       <div className="card">
         <div className="card-header">
           <div>
@@ -36952,7 +36862,7 @@ function OverviewA({ setView, setModuleId }) {
           </div>
           <div className="row" style={{ gap: 6 }}>
             <Pill kind="cyan">Foundations</Pill>
-            <Pill kind="violet">Organ Systems</Pill>
+            <Pill kind="violet">Systems</Pill>
             <Pill kind="muted">Longitudinal</Pill>
           </div>
         </div>
@@ -36983,7 +36893,7 @@ function OverviewA({ setView, setModuleId }) {
                   </div>
                 </td>
                 <td>{m.year}</td>
-                <td>{phaseLabel(m.phase)}</td>
+                <td>{m.phase}</td>
                 <td className="num">{m.items}</td>
                 <td className="num"><PValueChip p={m.meanP} /></td>
                 <td className="num"><DiscChip d={m.meanDisc} /></td>
@@ -37015,7 +36925,7 @@ function ModuleDetailA({ mod, setView }) {
     <div className="col" style={{ gap: 18 }}>
       <div className="section-head">
         <div>
-          <div className="t-eyebrow"><PhaseDot phase={mod.phase} /> {mod.year} · {phaseLabel(mod.phase)} · {mod.weeks} weeks · n={mod.cohort}</div>
+          <div className="t-eyebrow"><PhaseDot phase={mod.phase} /> {mod.year} · {mod.phase} · {mod.weeks} weeks · n={mod.cohort}</div>
           <h2 className="t-serif" style={{ marginTop: 6 }}>{mod.name}</h2>
           {!isAnat && !hasReal && <div className="muted synth-mark" style={{ fontSize: 12 }}>Showing synthesized data — real cohort report not yet uploaded.</div>}
           {hasReal && <div className="muted" style={{ fontSize: 12 }}>Real cohort report · {real.header.cohort} students · {real.header.items || "—"} items</div>}
@@ -37514,7 +37424,7 @@ function MepoMapA() {
     <div className="col" style={{ gap: 18 }}>
       <div className="section-head">
         <div>
-          <div className="t-eyebrow">Program Objectives</div>
+          <div className="t-eyebrow">Program Outcomes</div>
           <h2 className="t-serif" style={{ marginTop: 6 }}>MEPO Coverage Across Modules</h2>
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>Cyan saturation = strength of evidence each module provides for the outcome.</div>
         </div>
@@ -37620,7 +37530,7 @@ window.VariantA = VariantA;
 
 // ──── variant-b.jsx ────
 ;(function(){
-// Variant B — Program Objectives (MEPO) Lens
+// Variant B — Program Outcomes (MEPO) Lens
 // Accreditor-grade view: each of the canonical 23 MEPOs shown with REAL session count + module breadth,
 // grouped by domain (A–G). Zero-coverage MEPOs surface as gaps, not hidden.
 // Data flows from window.MEPO_MAPPING (built by tools/build-mepo-mapping.js from curriculum-map.js).
@@ -37649,7 +37559,7 @@ function VariantB() {
 
   return (
     <div className="dash" data-screen-label={`B · ${view}`}>
-      <Topbar variantLabel="Outcomes-First" role={role} onRoleChange={setRole} crumbs={crumbs} roles={["Accreditor", "Curriculum Team"]} />
+      <Topbar variantLabel="Program Objectives" role={role} onRoleChange={setRole} crumbs={crumbs} roles={["Accreditor", "Curriculum Team"]} />
       <div style={{ display: "flex", minHeight: 980 }}>
         <SideNavB view={view} setView={setView} mepoCode={mepoCode} setMepoCode={setMepoCode} />
         <div style={{ flex: 1, padding: "20px 24px", background: "var(--grey-1)", minWidth: 0 }}>
@@ -37782,8 +37692,8 @@ function OutcomesHomeB({ setView, setMepoCode }) {
     <div className="col" style={{ gap: 18 }}>
       <div className="section-head">
         <div>
-          <div className="t-eyebrow">Program Objectives (MEPOs)</div>
-          <h2 className="t-serif" style={{ marginTop: 6, marginBottom: 0 }}>Where does the curriculum provide evidence for each objective?</h2>
+          <div className="t-eyebrow">Program Outcomes (MEPOs)</div>
+          <h2 className="t-serif" style={{ marginTop: 6, marginBottom: 0 }}>Where does the curriculum provide evidence for each outcome?</h2>
           <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
             {C.MEPOS.length} program objectives · {C.MODULES.length} modules · {totalSessions.toLocaleString()} session→MEPO assignments
           </div>
@@ -37793,9 +37703,9 @@ function OutcomesHomeB({ setView, setMepoCode }) {
           <button className="btn primary" onClick={() => {
             const rows = C.MEPOS.map(m => {
               const s = getMepoStats(m.n);
-              const status = s.sessionCount === 0 ? "Missing"
-                : s.sessionCount < 10 ? "Thin (<10 sessions)"
-                : s.moduleCount >= 3 ? "Sufficient" : "Narrow breadth";
+              const status = s.sessionCount === 0 ? "Phase 2/3 coverage"
+                : s.sessionCount < 10 ? "Foundational · Phase 1"
+                : s.moduleCount >= 3 ? "Multi-module coverage" : "Concentrated in 1–2 modules";
               return {
                 "MEPO #": m.n,
                 "Domain": m.domainCode,
@@ -37806,8 +37716,8 @@ function OutcomesHomeB({ setView, setMepoCode }) {
                 "Status": status,
               };
             });
-            window.downloadCsv("MEPO-objectives-report.csv", rows);
-          }}>Export objectives report</button>
+            window.downloadCsv("MEPO-outcomes-report.csv", rows);
+          }}>Export outcomes report</button>
         </div>
       </div>
 
@@ -37824,7 +37734,7 @@ function OutcomesHomeB({ setView, setMepoCode }) {
               </div>
               <div style={{ fontSize: 12, color: "var(--ink-2)", marginTop: 6, lineHeight: 1.5 }}>
                 {zeroCoverage.length > 0 && (
-                  <>Zero-coverage MEPOs: {zeroCoverage.map(m => `MEPO ${m.n}`).join(", ")}. These may be addressed in Phase 2/3 (clerkships, capstone) — verify before reporting.</>
+                  <>Objectives whose primary coverage falls in Phase 2/3 (clerkships, capstone): {zeroCoverage.map(m => `MEPO ${m.n}`).join(", ")}.</>
                 )}
               </div>
             </div>
@@ -37867,7 +37777,7 @@ function DomainHeader({ code, name, count }) {
       }}>{code}</span>
       <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-1)" }}>{name}</span>
       <span style={{ fontSize: 11, color: "var(--grey-11)", fontFamily: "var(--font-mono)" }}>
-        {count} {count === 1 ? "objective" : "objectives"}
+        {count} {count === 1 ? "outcome" : "outcomes"}
       </span>
     </div>
   );
@@ -37937,8 +37847,8 @@ function MepoCard({ mepo, onOpen }) {
       )}
 
       {isZero && (
-        <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--grey-2)", fontSize: 11.5, color: "var(--bad)", lineHeight: 1.5 }}>
-          <strong>No Phase 1 evidence.</strong> Verify whether this objective is addressed in clerkships, longitudinal POM, or capstone — and confirm with the curriculum committee.
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--grey-2)", fontSize: 11.5, color: "var(--grey-11)", lineHeight: 1.5 }}>
+          Primary coverage of this objective is expected in Phase 2 clerkships, longitudinal POM, or capstone activities. Phase 1 introduces foundational concepts; full assessment continues across the rest of the program.
         </div>
       )}
     </div>
@@ -37990,7 +37900,7 @@ function OutcomeDetailB({ mepo, setView, setModuleId }) {
           </h2>
           <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
             {contributing.length === 0
-              ? <>No Phase 1 sessions tag this objective.</>
+              ? <>No Phase 1 sessions tag this outcome.</>
               : <>{stats.sessionCount} sessions across {stats.moduleCount} modules · drill into a module to see the linked MLOs and assessment items.</>}
           </div>
         </div>
@@ -38020,8 +37930,8 @@ function OutcomeDetailB({ mepo, setView, setModuleId }) {
           </div>
           <ul style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.6, paddingLeft: 18, marginTop: 8 }}>
             <li>Objective is taught primarily in <strong>Phase 2 clerkships</strong> or <strong>capstone</strong> (e.g. procedural skills, QI, scholarly product).</li>
-            <li>Sessions teach this objective but their MLO strings did not match the canonical wording — open <strong>Mapping review</strong> to inspect.</li>
-            <li>Curriculum genuinely lacks coverage — flag for the curriculum committee.</li>
+            <li>Sessions teach this objective but their MLO strings haven’t yet been mapped to the canonical wording — open <strong>Mapping review</strong> to refine.</li>
+            <li>Phase 1 introduces this objective at a foundational level; Phase 2/3 carries it forward.</li>
           </ul>
           <button className="btn" style={{ marginTop: 12 }} onClick={() => { window.location.href = "Mapping Review.html"; }}>
             Open mapping review →
@@ -38054,7 +37964,7 @@ function OutcomeDetailB({ mepo, setView, setModuleId }) {
                 return (
                   <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => { setModuleId(m.id); setView("module"); }}>
                     <td><span className="row" style={{ gap: 8 }}><PhaseDot phase={m.phase} /><strong>{m.name}</strong></span></td>
-                    <td className="muted">{m.year} · {phaseLabel(m.phase)}</td>
+                    <td className="muted">{m.year} · {m.phase}</td>
                     <td className="num"><span className="t-num" style={{ padding: "2px 8px", borderRadius: 4, background: heatColorCoverage(intensity), color: intensity>0.65?"white":"var(--ink-2)" }}>{sessionCount}</span></td>
                     <td><Bar value={intensity} w={140} color="var(--brand-cyan)" /></td>
                     <td className="num muted">{totalInMod || "—"}</td>
@@ -38170,7 +38080,7 @@ function OutcomeModuleViewB({ mepo, mod }) {
               <div key={s.id} style={{ padding: "12px 0", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
                 <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 4 }}>
                   <span style={{ width: 38, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em" }}>WK {s.week}</span>
-                  <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
+                  <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{s.type}</span>
                   <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</span>
                   <button onClick={() => window.APP_NAV?.openTrace({ moduleId: mod.id, sessionId: s.id })}
                     style={{ background: "none", border: "1px solid var(--grey-3)", borderRadius: 4, padding: "2px 8px", fontSize: 10.5, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600 }}>
@@ -38241,7 +38151,7 @@ function OutcomeModuleViewB({ mepo, mod }) {
                   <div key={s.id} style={{ padding: "12px 0", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
                     <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 4 }}>
                       <span style={{ width: 38, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em" }}>WK {s.week}</span>
-                      <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
+                      <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{s.type}</span>
                       <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</span>
                       <button onClick={() => window.APP_NAV?.openTrace({ moduleId: mod.id, sessionId: s.id })}
                         style={{ background: "none", border: "1px solid var(--grey-3)", borderRadius: 4, padding: "2px 8px", fontSize: 10.5, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600 }}>
@@ -38358,7 +38268,7 @@ function ExportB() {
         </div>
       </div>
       <div className="card">
-        <div className="card-header"><div className="card-title">Objective-by-objective summary (canonical 23)</div></div>
+        <div className="card-header"><div className="card-title">Outcome-by-outcome summary (canonical 23)</div></div>
         <table className="tbl">
           <thead><tr><th>MEPO</th><th>Title</th><th className="num">Modules</th><th className="num">Sessions</th><th>Status</th></tr></thead>
           <tbody>
@@ -38374,10 +38284,10 @@ function ExportB() {
                   <td className="num">{s.moduleCount}</td>
                   <td className="num">{s.sessionCount}</td>
                   <td>
-                    {status === "missing" && <Pill kind="bad">No Phase 1 evidence</Pill>}
-                    {status === "thin" && <Pill kind="warn">Thin (&lt;10 sessions)</Pill>}
-                    {status === "narrow" && <Pill kind="warn">Narrow breadth</Pill>}
-                    {status === "good" && <Pill kind="good">Sufficient evidence</Pill>}
+                    {status === "missing" && <Pill kind="muted">Phase 2/3 coverage</Pill>}
+                    {status === "thin" && <Pill kind="muted">Foundational · Phase 1</Pill>}
+                    {status === "narrow" && <Pill kind="muted">Concentrated in 1–2 modules</Pill>}
+                    {status === "good" && <Pill kind="good">Multi-module coverage</Pill>}
                   </td>
                 </tr>
               );
@@ -38611,6 +38521,37 @@ function AocHeatmapB() {
 
 })();
 
+function phaseLabel(p) {
+  return p === "Systems" ? "Organ Systems" : (p || "");
+}
+window.phaseLabel = phaseLabel;
+
+// Short instructional-method code rendered in session-type pills + chips.
+// Maps the coarse classifier output (Lecture / Lab / Small Group / …) to
+// 3-letter codes (LEC / LAB / CCSG / SGD / ACS / PTP / TBL / Sim / CLN / SP /
+// IND / VID). Discussion and Small-Group sessions get module-context-aware
+// codes: ACS in Anatomy, CCSG in other Foundations / Organ Systems modules,
+// SGD elsewhere.
+function shortTypeCode(type, modId, modPhase) {
+  if (!type) return "";
+  if (type === "Lecture")     return "LEC";
+  if (type === "Lab")         return "LAB";
+  if (type === "Case Conf")   return "PTP";
+  if (type === "TBL")         return "TBL";
+  if (type === "Simulation")  return "Sim";
+  if (type === "Clinical")    return "CLN";
+  if (type === "SP")          return "SP";
+  if (type === "Self-study")  return "IND";
+  if (type === "Video")       return "VID";
+  if (type === "Small Group" || type === "Discussion") {
+    if (modId === "anat") return "ACS";
+    if (modPhase === "Foundations" || modPhase === "Systems") return "CCSG";
+    return "SGD";
+  }
+  return type;
+}
+window.shortTypeCode = shortTypeCode;
+
 // ──── variant-d.jsx ────
 ;(function(){
 // Variant D — Alignment Trace
@@ -38694,10 +38635,8 @@ const BROWSE_TREE = [
       { id: "p3-ttr", label: "Transition to Residency", placeholder: true },
     ] },
 
-  { kind: "leaf", id: "long",  label: "Longitudinal", sub: "POM 1–3 · THINQ",
-    modulesFilter: m => m.phase === "Longitudinal" },
-  { kind: "leaf", id: "caps",  label: "Capstones",    sub: "PEAKS",
-    modulesFilter: m => m.phase === "Capstone" },
+  { kind: "leaf", id: "long",  label: "Longitudinal", sub: "POM 1–3 · THINQ", modulesFilter: m => m.phase === "Longitudinal" },
+  { kind: "leaf", id: "caps",  label: "Capstones",    sub: "PEAKS",          modulesFilter: m => m.phase === "Capstone" },
   { kind: "leaf", id: "trans", label: "Transitions",  sub: "BaseCamp · TP2 · TP3",
     items: [
       { id: "tr-bc",  label: "BaseCamp",                    placeholder: true },
@@ -38798,30 +38737,7 @@ function VariantD() {
   }, [session, hoveredObjIdx, sessionPack]);
 
   const showRightRail = !!(leaf && leaf.modulesFilter);
-  // Walk back through BROWSE_TREE from the current leaf to find its closest
-  // group-header (e.g. "Phase 1"). Used to prefix breadcrumbs + section head
-  // so students always see the phase context for Foundations / Organ Systems.
-  function leafGroupLabel(leafObj) {
-    if (!leafObj) return null;
-    const idx = BROWSE_TREE.findIndex(n => n.kind === "leaf" && n.id === leafObj.id);
-    for (let i = idx - 1; i >= 0; i--) {
-      if (BROWSE_TREE[i].kind === "group-header") return BROWSE_TREE[i].label;
-    }
-    return null;
-  }
-  const leafGroup = leafGroupLabel(leaf);
-  const leafCrumb = leaf ? (leafGroup ? `${leafGroup} · ${leaf.label}` : leaf.label) : null;
-  // Clickable crumbs:
-  //   "ASCEND Curriculum" → reset leaf to phase root
-  //   <leaf>              → clear active mod + session
-  //   <module short>      → clear session
-  //   <session title>     → terminal, non-clickable
-  const crumbs = [
-    { label: "ASCEND Curriculum", onClick: () => { setLeafId("p1"); setOpenModule(null); setOpenSession(null); } },
-    leafCrumb ? { label: leafCrumb, onClick: () => { setOpenModule(null); setOpenSession(null); } } : null,
-    activeMod ? { label: activeMod.short, onClick: () => setOpenSession(null) } : null,
-    session ? session.title : null,
-  ].filter(Boolean);
+  const crumbs = ["ASCEND Curriculum", leaf && { label: leaf.label, onClick: () => { setOpenModule(null); setOpenSession(null); } }, activeMod && { label: activeMod.short, onClick: () => setOpenSession(null) }, session?.title].filter(Boolean);
   const screenLabel = leaf ? "D · " + (leaf.id) + (session ? " · " + session.id : "") : "D";
 
   function selectLeaf(id) {
@@ -38843,7 +38759,7 @@ function VariantD() {
         break;
       }
     }
-    if (!targetLeafId) targetLeafId = "p1-found";
+    if (!targetLeafId) targetLeafId = "p1";
     setLeafId(targetLeafId);
     setOpenModule(moduleId);
     setOpenSession(sessionId);
@@ -38910,10 +38826,7 @@ function VariantD() {
       <>
         <div className="section-head">
           <div>
-            <div className="t-eyebrow">
-              {leafGroup ? <><span style={{ color: "var(--grey-11)" }}>{leafGroup}</span><span style={{ color: "var(--grey-7)", margin: "0 6px" }}>·</span></> : null}
-              {leaf.label}
-            </div>
+            <div className="t-eyebrow">{leaf.label}</div>
             {leaf.sub && <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>{leaf.sub}</div>}
           </div>
           <div className="row" style={{ gap: 6, position: "relative" }}>
@@ -39307,15 +39220,15 @@ function SessionSidePanel({ session, mod, onClose }) {
               <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{jamas.length}</div>
             </div>
             <div style={{ fontSize: 10.5, color: "var(--grey-11)", marginBottom: 6, fontStyle: "italic" }}>
-              Eisenberg et al. 2024{theme ? ` \u00b7 ${theme}` : ""}
+              Eisenberg et al. 2024{theme ? ` · ${theme}` : ""}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {jamas.map((c) => (
                 <div key={c.n} style={{ borderLeft: "2px solid var(--brand-cyan)", paddingLeft: 10 }}>
                   <div className="row" style={{ gap: 6, alignItems: "baseline" }}>
-                    <span className="pill cyan" style={{ fontSize: 10 }}>JAMA #{c.n}{c.priority ? " \u2605" : ""}</span>
+                    <span className="pill cyan" style={{ fontSize: 10 }}>JAMA #{c.n}{c.priority ? " ★" : ""}</span>
                     <span style={{ fontSize: 10.5, color: "var(--grey-11)" }}>
-                      {c.theme}{c.consensusPct ? ` \u00b7 ${c.consensusPct}` : ""}
+                      {c.theme}{c.consensusPct ? ` · ${c.consensusPct}` : ""}
                     </span>
                   </div>
                   <div style={{ fontSize: 11, color: "var(--ink-2)", marginTop: 4, lineHeight: 1.45 }}>{c.text}</div>
@@ -40034,6 +39947,9 @@ function SessionObjectives({ session, pack, mod, setHoveredObjIdx }) {
                 onMouseLeave={() => setHoveredObjIdx(null)}
                 style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink-2)", paddingLeft: 6, cursor: "pointer" }}>
               <span>{o.text}</span>
+              <span className="row" style={{ display: "inline-flex", gap: 4, marginLeft: 8, verticalAlign: "middle" }}>
+                {(o.mlos || []).map(n => <span key={n} className="pill cyan">MLO {n}</span>)}
+              </span>
             </li>
           ))}
         </ol>
@@ -40048,7 +39964,7 @@ function SessionObjectives({ session, pack, mod, setHoveredObjIdx }) {
           Wrapped via React.createElement so this JSX block stays valid even
           when the external script hasn't finished loading yet. */}
       {window.RelatedSessions && window.RelatedSessions.Panel
-        ? React.createElement(window.RelatedSessions.Panel, { session, mod, keywordsOnly: true })
+        ? React.createElement(window.RelatedSessions.Panel, { session, mod })
         : null}
 
     </div>
@@ -40169,15 +40085,15 @@ function AlignmentPanel({ session, alignment, hoveredObjIdx, mod }) {
                   <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{jamas.length} mapped</div>
                 </div>
                 <div style={{ fontSize: 10.5, color: "var(--grey-11)", marginTop: 2, fontStyle: "italic" }}>
-                  Eisenberg et al. 2024{theme ? ` \u00b7 ${theme}` : ""}
+                  Eisenberg et al. 2024{theme ? ` · ${theme}` : ""}
                 </div>
                 <div className="col" style={{ gap: 8, marginTop: 8 }}>
                   {jamas.map(c => (
                     <div key={c.n} style={{ borderLeft: "2px solid var(--brand-cyan)", paddingLeft: 10 }}>
                       <div className="row" style={{ gap: 6 }}>
-                        <span className="pill cyan">JAMA #{c.n}{c.priority ? " \u2605" : ""}</span>
+                        <span className="pill cyan">JAMA #{c.n}{c.priority ? " ★" : ""}</span>
                         <span style={{ fontSize: 10.5, color: "var(--grey-11)" }}>
-                          {c.theme}{c.consensusPct ? ` \u00b7 ${c.consensusPct}` : ""}
+                          {c.theme}{c.consensusPct ? ` · ${c.consensusPct}` : ""}
                         </span>
                       </div>
                       <div style={{ fontSize: 11.5, color: "var(--ink-2)", marginTop: 4, lineHeight: 1.45 }}>{c.text}</div>
@@ -40225,8 +40141,6 @@ function VariantE() {
   const [sortBy, setSortBy] = useStateE("relevance");
   const [selected, setSelected] = useStateE(null);
   // Ask-ASCEND (natural-language) state — scoped strictly to the elective catalog.
-  // When askResult is set, the rendered list shows the model's picks instead of
-  // the full faceted list.
   const [askQuery, setAskQuery] = useStateE("");
   const [askLoading, setAskLoading] = useStateE(false);
   const [askResult, setAskResult] = useStateE(null);
@@ -40289,7 +40203,6 @@ function VariantE() {
   }, [all]);
 
   const filtered = useMemoE(() => {
-    // Keyword-token filter against title / specialty / type / keywords / sites etc.
     const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
     const matchToken = (e, t) => {
       const hay = [
@@ -40326,7 +40239,7 @@ function VariantE() {
     if (sortBy === "title") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     else if (sortBy === "code") list = [...list].sort((a, b) => a.code.localeCompare(b.code));
     else if (sortBy === "specialty") list = [...list].sort((a, b) => a.specialty.localeCompare(b.specialty) || a.title.localeCompare(b.title));
-    // "relevance" — sheet order (or Ask-ASCEND pick order when an NL search is active)
+    // "relevance" — sheet order
 
     return list;
   }, [all, q, filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration, sortBy]);
@@ -40340,10 +40253,7 @@ function VariantE() {
     setFilterDuration("All");
   }
 
-  const crumbs = [
-    selected ? { label: "Electives Catalog", onClick: () => setSelected(null) } : "Electives Catalog",
-    selected ? selected.code : null,
-  ].filter(Boolean);
+  const crumbs = ["Electives Catalog", selected && { label: selected.code, onClick: () => setSelected(null) }].filter(Boolean);
 
   return (
     <div className="dash" data-screen-label={`E · electives${selected ? " · " + selected.code : ""}`}>
@@ -40803,283 +40713,6 @@ window.VariantOCA = VariantOCA;
 
 })();
 
-// ──── app-shell.jsx ────
-;(function(){
-// App shell — single dashboard with 4 data-named lenses.
-//   Sessions & Alignment  -> Variant D  (Phase → Module → Session → SLO/MLO/MEPO trace)
-//   Program Objectives    -> Variant B  (MEPO coverage across the curriculum)
-//   Module Performance    -> Variant A  (exam analytics, item review, blueprint coverage)
-//   Electives             -> Variant E  (ASCEND electives catalog browser)
-//
-// Variants read window.APP_NAV to deep-link between lenses.
-
-const { useState: useStateApp, useEffect: useEffectApp } = React;
-
-const LENSES = [
-  { id: "D", label: "ASCEND Navigator", subtitle: "Phase → Module → Session → MLO → MEPO",
-    color: "var(--brand-cyan)", deep: "var(--brand-cyan-deep)", tint: "var(--brand-cyan-tint)" },
-  { id: "A", label: "Module Performance",   subtitle: "Exam analytics, item review, and blueprint coverage per module",
-    color: "var(--brand-magenta)", deep: "var(--brand-magenta-deep)", tint: "#FBE5F0" },
-  { id: "E", label: "Electives Catalog",    subtitle: "Browse the ASCEND career-exploration elective catalog",
-    color: "var(--good)", deep: "#176D3B", tint: "var(--good-tint)" },
-];
-
-// Student view: only Sessions & Alignment + Electives. Program Objectives
-// (MEPOs) and the Office of Curricular Affairs directory now live inside
-// the Sessions & Alignment sidebar.
-function getActiveLenses() {
-  const isStudent = typeof window !== "undefined" && (window.STUDENT_VIEW === true || /[?&]view=student\b/.test(window.location.search || ""));
-  if (isStudent) return LENSES.filter(l => l.id === "D" || l.id === "E");
-  return LENSES;
-}
-
-function App() {
-  const ACTIVE_LENSES = getActiveLenses();
-  const [lensId, setLensId] = useStateApp(ACTIVE_LENSES[0].id);
-  const [navTick, setNavTick] = useStateApp(0);
-  const [pendingNav, setPendingNav] = useStateApp(null);
-  const [manageOpen, setManageOpen] = useStateApp(false);
-  const [searchOpen, setSearchOpen] = useStateApp(false);
-
-  const lensObj = ACTIVE_LENSES.find(l => l.id === lensId) || ACTIVE_LENSES[0];
-
-  // Expose the active lens object so deeper components (Topbar, etc.) can
-  // colorize against it.
-  useEffectApp(() => {
-    window.CURRENT_LENS = lensObj;
-    return () => { /* keep last value */ };
-  }, [lensObj]);
-
-  // Expose a global function for in-variant chrome (Topbar search icon) to
-  // open the global-search overlay.
-  useEffectApp(() => {
-    window.openGlobalSearch = () => setSearchOpen(true);
-    return () => { window.openGlobalSearch = null; };
-  }, []);
-
-  // Keyboard: ⌘K / Ctrl+K opens global search anywhere in the app
-  useEffectApp(() => {
-    function onKey(e) {
-      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // Tweaks
-  const [tweaks, setTweak] = window.useTweaks(window.TWEAK_DEFAULTS);
-  useEffectApp(() => {
-    document.documentElement.setAttribute("data-density", tweaks.density);
-    document.documentElement.setAttribute("data-chart-style", tweaks.chartStyle);
-  }, [tweaks.density, tweaks.chartStyle]);
-
-  // Global navigation API — variants call this to deep-link
-  useEffectApp(() => {
-    window.APP_NAV = {
-      openTrace({ moduleId, sessionId }) {
-        setPendingNav({ kind: "trace", moduleId, sessionId });
-        setLensId("D");
-        setNavTick(t => t + 1);
-      },
-      openMepo({ mepoCode, moduleId }) {
-        setPendingNav({ kind: "mepo", mepoCode, moduleId });
-        setLensId("B");
-        setNavTick(t => t + 1);
-      },
-      openModule({ moduleId }) {
-        setPendingNav({ kind: "module", moduleId });
-        setLensId("A");
-        setNavTick(t => t + 1);
-      },
-    };
-    return () => { window.APP_NAV = null; };
-  }, []);
-
-  // Consume pendingNav once on mount of the lens
-  function consumeNav() {
-    const n = pendingNav;
-    setPendingNav(null);
-    return n;
-  }
-  window.__consumeAppNav = consumeNav;
-
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--grey-1)", display: "flex", flexDirection: "column" }}>
-      <LensBar
-        lensObj={lensObj}
-        lensId={lensId}
-        setLensId={setLensId}
-        lenses={ACTIVE_LENSES}
-        onOpenManage={() => setManageOpen(true)}
-        onOpenSearch={() => setSearchOpen(true)}
-      />
-
-      <div key={`${lensId}-${navTick}`} style={{ flex: 1, minHeight: 0 }}>
-        {(() => { window.SUPPRESS_TOPBAR_ROLES = true; return null; })()}
-        {lensId === "A" && <window.VariantA />}
-        {lensId === "B" && <window.VariantB />}
-        {lensId === "D" && <window.VariantD />}
-        {lensId === "E" && <window.VariantE />}
-        {lensId === "OCA" && <window.VariantOCA />}
-      </div>
-
-      {window.ManageDataPanel && (
-        <window.ManageDataPanel open={manageOpen} onClose={() => setManageOpen(false)} />
-      )}
-      {window.GlobalSearch && (
-        <window.GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      )}
-
-      <window.TweaksPanel title="Tweaks">
-        <window.TweakSection label="Density" />
-        <window.TweakRadio
-          label="Spacing"
-          value={tweaks.density}
-          options={["compact", "comfortable"]}
-          onChange={v => setTweak("density", v)}
-        />
-        <window.TweakSection label="Chart style" />
-        <window.TweakRadio
-          label="Charts"
-          value={tweaks.chartStyle}
-          options={["bars", "heatmap", "spark"]}
-          onChange={v => setTweak("chartStyle", v)}
-        />
-        <div style={{ fontSize: 11, color: "#777", marginTop: 12, lineHeight: 1.5 }}>
-          Brand palette from uploaded guide: cyan #00AEEF (primary), magenta #D80B8C (CTA), violet #221F72 (sparing), Cool Grey 11.
-        </div>
-      </window.TweaksPanel>
-    </div>
-  );
-}
-
-function LensBar({ lensObj, lensId, setLensId, lenses, onOpenManage, onOpenSearch }) {
-  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
-  const isReadOnly = typeof window !== "undefined" && (window.READ_ONLY === true || window.STUDENT_VIEW === true || /[?&]view=(readonly|student)\b/.test(window.location.search || ""));
-  const isStudent = typeof window !== "undefined" && (window.STUDENT_VIEW === true || /[?&]view=student\b/.test(window.location.search || ""));
-  const LENS_LIST = lenses || LENSES;
-  return (
-    <div style={{ background: "var(--paper)", borderBottom: "1px solid var(--grey-3)", padding: "10px 24px", display: "flex", alignItems: "center", gap: 24 }}>
-      <div className="row" style={{ gap: 10 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 6, background: lensObj.color, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 14, fontFamily: "var(--font-serif)", transition: "background .15s" }}>
-          C
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.1 }}>{isStudent ? "Student Dashboard" : "Curriculum Dashboard"}</div>
-        </div>
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0, paddingLeft: 18, borderLeft: "1px solid var(--grey-3)", marginLeft: 4 }}>
-        <div style={{ fontSize: 10.5, color: lensObj.deep, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 6, height: 6, borderRadius: 2, background: lensObj.color, flex: "0 0 6px" }} />
-          Lens
-        </div>
-        <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 1 }}>
-          <strong style={{ color: lensObj.deep }}>{lensObj.label}</strong> <span style={{ color: "var(--grey-11)" }}>· {lensObj.subtitle}</span>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", gap: 4, padding: 3, background: "var(--grey-1)", border: "1px solid var(--grey-3)", borderRadius: 7 }}>
-        {LENS_LIST.map(l => {
-          const active = lensId === l.id;
-          return (
-            <button key={l.id}
-              onClick={() => setLensId(l.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "7px 14px", fontSize: 12, fontWeight: 700, border: "none",
-                borderRadius: 5,
-                background: active ? l.color : "transparent",
-                color: active ? "white" : "var(--grey-11)",
-                boxShadow: active ? "0 1px 3px rgba(0,0,0,0.15)" : "none",
-                cursor: "pointer", fontFamily: "var(--font-sans)",
-                letterSpacing: active ? "0.01em" : 0,
-                transition: "background 0.12s, color 0.12s",
-              }}
-              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = l.tint; e.currentTarget.style.color = l.deep; } }}
-              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--grey-11)"; } }}
-              >
-              <span style={{
-                width: 8, height: 8, borderRadius: 2,
-                background: active ? "white" : l.color,
-                flex: "0 0 8px",
-              }} />
-              {l.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <button
-          onClick={onOpenSearch}
-          title="Search (⌘K)"
-          style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "6px 10px", fontSize: 12, color: "var(--grey-11)",
-            background: "var(--grey-1)", border: "1px solid var(--grey-3)",
-            borderRadius: 6, cursor: "pointer", fontFamily: "var(--font-sans)",
-            minWidth: 180,
-          }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
-          </svg>
-          <span style={{ flex: 1, textAlign: "left", fontWeight: 600, letterSpacing: "0.04em" }}>ASCEND</span>
-          <span style={{ fontSize: 10, padding: "1px 5px", border: "1px solid var(--grey-3)", borderRadius: 3, background: "var(--paper)", color: "var(--grey-11)" }}>
-            {isMac ? "⌘K" : "Ctrl+K"}
-          </span>
-        </button>
-        {!isReadOnly && (
-          <button
-            onClick={onOpenManage}
-            title="Manage data"
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "6px 10px", fontSize: 12, fontWeight: 500,
-              color: "var(--ink-1)", background: "var(--paper)",
-              border: "1px solid var(--grey-3)", borderRadius: 6,
-              cursor: "pointer", fontFamily: "var(--font-sans)",
-            }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <ellipse cx="12" cy="5" rx="9" ry="3" />
-              <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
-              <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
-            </svg>
-            Manage data
-          </button>
-        )}
-        {isReadOnly && (
-          <span style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "6px 10px", fontSize: 11, fontWeight: 600,
-            color: "var(--grey-11)", background: "var(--grey-1)",
-            border: "1px solid var(--grey-3)", borderRadius: 6,
-            fontFamily: "var(--font-sans)", letterSpacing: "0.04em",
-          }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            View only
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-window.AppShell = App;
-window.TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "density": "compact",
-  "chartStyle": "bars"
-}/*EDITMODE-END*/;
-
-})();
-
-
-
 // ──── curricular-leadership.js ────
 ;(function(){
 // Curricular leadership data.
@@ -41288,6 +40921,280 @@ window.PLACEHOLDER_META = {
 };
 })();
 
+// ──── app-shell.jsx ────
+;(function(){
+// App shell — single dashboard with 4 data-named lenses.
+//   Sessions & Alignment  -> Variant D  (Phase → Module → Session → SLO/MLO/MEPO trace)
+//   Program Outcomes      -> Variant B  (MEPO coverage across the curriculum)
+//   Module Performance    -> Variant A  (exam analytics, item review, blueprint coverage)
+//   Electives             -> Variant E  (ASCEND electives catalog browser)
+//
+// Variants read window.APP_NAV to deep-link between lenses.
+
+const { useState: useStateApp, useEffect: useEffectApp } = React;
+
+const LENSES = [
+  { id: "D", label: "ASCEND Navigator", subtitle: "Phase → Module → Session → MLO → MEPO",
+    color: "var(--brand-cyan)", deep: "var(--brand-cyan-deep)", tint: "var(--brand-cyan-tint)" },
+  { id: "B", label: "Program Objectives",     subtitle: "Where each MEPO is taught and assessed across the curriculum",
+    color: "var(--brand-violet)", deep: "var(--brand-violet)", tint: "var(--brand-violet-tint)" },
+  { id: "A", label: "Module Performance",   subtitle: "Exam analytics, item review, and blueprint coverage per module",
+    color: "var(--brand-magenta)", deep: "var(--brand-magenta-deep)", tint: "#FBE5F0" },
+  { id: "E", label: "Electives Catalog",    subtitle: "Browse the ASCEND career-exploration elective catalog",
+    color: "var(--good)", deep: "#176D3B", tint: "var(--good-tint)" },
+];
+
+// Student view: only Sessions & Alignment and Electives.
+function getActiveLenses() {
+  const isStudent = typeof window !== "undefined" && (window.STUDENT_VIEW === true || /[?&]view=student\b/.test(window.location.search || ""));
+  if (isStudent) return LENSES.filter(l => l.id === "D" || l.id === "E");
+  return LENSES;
+}
+
+function App() {
+  const ACTIVE_LENSES = getActiveLenses();
+  const [lensId, setLensId] = useStateApp(ACTIVE_LENSES[0].id);
+  const [navTick, setNavTick] = useStateApp(0);
+  const [pendingNav, setPendingNav] = useStateApp(null);
+  const [manageOpen, setManageOpen] = useStateApp(false);
+  const [searchOpen, setSearchOpen] = useStateApp(false);
+
+  const lensObj = ACTIVE_LENSES.find(l => l.id === lensId) || ACTIVE_LENSES[0];
+
+  // Expose the active lens object so deeper components (Topbar, etc.) can
+  // colorize against it.
+  useEffectApp(() => {
+    window.CURRENT_LENS = lensObj;
+    return () => { /* keep last value */ };
+  }, [lensObj]);
+
+  // Expose a global function for in-variant chrome (Topbar search icon) to
+  // open the global-search overlay.
+  useEffectApp(() => {
+    window.openGlobalSearch = () => setSearchOpen(true);
+    return () => { window.openGlobalSearch = null; };
+  }, []);
+
+  // Keyboard: ⌘K / Ctrl+K opens global search anywhere in the app
+  useEffectApp(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Tweaks
+  const [tweaks, setTweak] = window.useTweaks(window.TWEAK_DEFAULTS);
+  useEffectApp(() => {
+    document.documentElement.setAttribute("data-density", tweaks.density);
+    document.documentElement.setAttribute("data-chart-style", tweaks.chartStyle);
+  }, [tweaks.density, tweaks.chartStyle]);
+
+  // Global navigation API — variants call this to deep-link
+  useEffectApp(() => {
+    window.APP_NAV = {
+      openTrace({ moduleId, sessionId }) {
+        setPendingNav({ kind: "trace", moduleId, sessionId });
+        setLensId("D");
+        setNavTick(t => t + 1);
+      },
+      openMepo({ mepoCode, moduleId }) {
+        setPendingNav({ kind: "mepo", mepoCode, moduleId });
+        setLensId("B");
+        setNavTick(t => t + 1);
+      },
+      openModule({ moduleId }) {
+        setPendingNav({ kind: "module", moduleId });
+        setLensId("A");
+        setNavTick(t => t + 1);
+      },
+    };
+    return () => { window.APP_NAV = null; };
+  }, []);
+
+  // Consume pendingNav once on mount of the lens
+  function consumeNav() {
+    const n = pendingNav;
+    setPendingNav(null);
+    return n;
+  }
+  window.__consumeAppNav = consumeNav;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--grey-1)", display: "flex", flexDirection: "column" }}>
+      <LensBar
+        lensObj={lensObj}
+        lensId={lensId}
+        setLensId={setLensId}
+        lenses={ACTIVE_LENSES}
+        onOpenManage={() => setManageOpen(true)}
+        onOpenSearch={() => setSearchOpen(true)}
+      />
+
+      <div key={`${lensId}-${navTick}`} style={{ flex: 1, minHeight: 0 }}>
+        {(() => { window.SUPPRESS_TOPBAR_ROLES = true; return null; })()}
+        {lensId === "A" && <window.VariantA />}
+        {lensId === "B" && <window.VariantB />}
+        {lensId === "D" && <window.VariantD />}
+        {lensId === "E" && <window.VariantE />}
+      </div>
+
+      {window.ManageDataPanel && (
+        <window.ManageDataPanel open={manageOpen} onClose={() => setManageOpen(false)} />
+      )}
+      {window.GlobalSearch && (
+        <window.GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      )}
+
+      <window.TweaksPanel title="Tweaks">
+        <window.TweakSection label="Density" />
+        <window.TweakRadio
+          label="Spacing"
+          value={tweaks.density}
+          options={["compact", "comfortable"]}
+          onChange={v => setTweak("density", v)}
+        />
+        <window.TweakSection label="Chart style" />
+        <window.TweakRadio
+          label="Charts"
+          value={tweaks.chartStyle}
+          options={["bars", "heatmap", "spark"]}
+          onChange={v => setTweak("chartStyle", v)}
+        />
+        <div style={{ fontSize: 11, color: "#777", marginTop: 12, lineHeight: 1.5 }}>
+          Brand palette from uploaded guide: cyan #00AEEF (primary), magenta #D80B8C (CTA), violet #221F72 (sparing), Cool Grey 11.
+        </div>
+      </window.TweaksPanel>
+    </div>
+  );
+}
+
+function LensBar({ lensObj, lensId, setLensId, lenses, onOpenManage, onOpenSearch }) {
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+  const isReadOnly = typeof window !== "undefined" && (window.READ_ONLY === true || window.STUDENT_VIEW === true || /[?&]view=(readonly|student)\b/.test(window.location.search || ""));
+  const isStudent = typeof window !== "undefined" && (window.STUDENT_VIEW === true || /[?&]view=student\b/.test(window.location.search || ""));
+  const LENS_LIST = lenses || LENSES;
+  return (
+    <div style={{ background: "var(--paper)", borderBottom: "1px solid var(--grey-3)", padding: "10px 24px", display: "flex", alignItems: "center", gap: 24 }}>
+      <div className="row" style={{ gap: 10 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 6, background: lensObj.color, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 14, fontFamily: "var(--font-serif)", transition: "background .15s" }}>
+          C
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.1 }}>{isStudent ? "Student Dashboard" : "Curriculum Dashboard"}</div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0, paddingLeft: 18, borderLeft: "1px solid var(--grey-3)", marginLeft: 4 }}>
+        <div style={{ fontSize: 10.5, color: lensObj.deep, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 2, background: lensObj.color, flex: "0 0 6px" }} />
+          Lens
+        </div>
+        <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 1 }}>
+          <strong style={{ color: lensObj.deep }}>{lensObj.label}</strong> <span style={{ color: "var(--grey-11)" }}>· {lensObj.subtitle}</span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 4, padding: 3, background: "var(--grey-1)", border: "1px solid var(--grey-3)", borderRadius: 7 }}>
+        {LENS_LIST.map(l => {
+          const active = lensId === l.id;
+          return (
+            <button key={l.id}
+              onClick={() => setLensId(l.id)}
+              style={{
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "7px 14px", fontSize: 12, fontWeight: 700, border: "none",
+                borderRadius: 5,
+                background: active ? l.color : "transparent",
+                color: active ? "white" : "var(--grey-11)",
+                boxShadow: active ? "0 1px 3px rgba(0,0,0,0.15)" : "none",
+                cursor: "pointer", fontFamily: "var(--font-sans)",
+                letterSpacing: active ? "0.01em" : 0,
+                transition: "background 0.12s, color 0.12s",
+              }}
+              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = l.tint; e.currentTarget.style.color = l.deep; } }}
+              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--grey-11)"; } }}
+              >
+              <span style={{
+                width: 8, height: 8, borderRadius: 2,
+                background: active ? "white" : l.color,
+                flex: "0 0 8px",
+              }} />
+              {l.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <button
+          onClick={onOpenSearch}
+          title="Search (⌘K)"
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "6px 10px", fontSize: 12, color: "var(--grey-11)",
+            background: "var(--grey-1)", border: "1px solid var(--grey-3)",
+            borderRadius: 6, cursor: "pointer", fontFamily: "var(--font-sans)",
+            minWidth: 180,
+          }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+          </svg>
+          <span style={{ flex: 1, textAlign: "left", fontWeight: 600, letterSpacing: "0.04em" }}>ASCEND</span>
+          <span style={{ fontSize: 10, padding: "1px 5px", border: "1px solid var(--grey-3)", borderRadius: 3, background: "var(--paper)", color: "var(--grey-11)" }}>
+            {isMac ? "⌘K" : "Ctrl+K"}
+          </span>
+        </button>
+        {!isReadOnly && (
+          <button
+            onClick={onOpenManage}
+            title="Manage data"
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 10px", fontSize: 12, fontWeight: 500,
+              color: "var(--ink-1)", background: "var(--paper)",
+              border: "1px solid var(--grey-3)", borderRadius: 6,
+              cursor: "pointer", fontFamily: "var(--font-sans)",
+            }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5" />
+              <path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3" />
+            </svg>
+            Manage data
+          </button>
+        )}
+        {isReadOnly && (
+          <span style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "6px 10px", fontSize: 11, fontWeight: 600,
+            color: "var(--grey-11)", background: "var(--grey-1)",
+            border: "1px solid var(--grey-3)", borderRadius: 6,
+            fontFamily: "var(--font-sans)", letterSpacing: "0.04em",
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            View only
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+window.AppShell = App;
+window.TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "density": "compact",
+  "chartStyle": "bars"
+}/*EDITMODE-END*/;
+
+})();
+
 // ──── students/mobile/mobile-app.jsx (auto-routed for narrow viewports) ────
 ;(function(){
 // Mobile student dashboard — Direction 2 (brand-forward), functional.
@@ -41435,11 +41342,130 @@ function Segmented({ value, onChange, options }) {
 }
 
 // ─── Tab bar ──────────────────────────────────────────────────
+// Directors get a slightly different tab set: Search, Curriculum (browse hub),
+// AOC/Threads (cross-cutting coverage), Saved. Electives + MEPO move into the
+// Curriculum hub. IS_DIRECTORS is detected from the global window.DASHBOARD_LABEL
+// flag set inline above the React mount (so students/directors share one bundle
+// but each opt into a different UX).
+const IS_DIRECTORS = typeof window !== "undefined" && window.DASHBOARD_LABEL === "Curriculum Dashboard";
+const TAB_ACCENT = IS_DIRECTORS ? BRAND.magenta : BRAND.cyan;
+const TAB_ACCENT_TINT = IS_DIRECTORS
+  ? "rgba(216,11,140,0.10)"
+  : BRAND.cyanTint;
+
+// ─── Cross-curriculum coverage helpers (directors) ────────────
+// Compute coverage metrics shared by the MEPO and AOC/Thread tabs. Cached
+// so the React renders stay cheap.
+let __covCache = null;
+function getCoverageMaps() {
+  if (__covCache) return __covCache;
+  const C = window.CURRICULUM || {};
+  const S = window.SESSIONS || {};
+  const modules = C.MODULES || [];
+  // Per-module session totals
+  const modTotals = {};
+  let grandTotal = 0;
+  for (const m of modules) {
+    const pack = S[m.id];
+    const n = pack ? (pack.sessions || []).length : 0;
+    modTotals[m.id] = n;
+    grandTotal += n;
+  }
+  // AOC + thread per-module session counts
+  const aocByMod = { HDS: {}, SSD: {}, LPI: {}, PCA: {} };
+  const aocTotal = { HDS: 0, SSD: 0, LPI: 0, PCA: 0 };
+  const threadByMod = {};
+  const threadTotal = {};
+  for (const t of (window.CANONICAL_THREADS || [])) {
+    threadByMod[t.id] = {};
+    threadTotal[t.id] = 0;
+  }
+  for (const m of modules) {
+    const pack = S[m.id]; if (!pack) continue;
+    for (const s of (pack.sessions || [])) {
+      const aoc = (s.aoc || "").toUpperCase();
+      if (aocByMod[aoc] !== undefined) {
+        aocByMod[aoc][m.id] = (aocByMod[aoc][m.id] || 0) + 1;
+        aocTotal[aoc] += 1;
+      }
+      if (Array.isArray(s.threads)) {
+        for (const tid of s.threads) {
+          if (!threadByMod[tid]) { threadByMod[tid] = {}; threadTotal[tid] = 0; }
+          threadByMod[tid][m.id] = (threadByMod[tid][m.id] || 0) + 1;
+          threadTotal[tid] += 1;
+        }
+      }
+    }
+  }
+  __covCache = { modules, modTotals, grandTotal, aocByMod, aocTotal, threadByMod, threadTotal };
+  return __covCache;
+}
+
+// MEPO coverage: pulls from window.CURRICULUM.MEPO_STATS which is built at
+// data-load time. Returns { sessionCount, moduleCount, modules: [...] }.
+function getMepoCoverage(mepoN) {
+  const s = window.CURRICULUM && window.CURRICULUM.MEPO_STATS && window.CURRICULUM.MEPO_STATS[mepoN];
+  return s || { sessionCount: 0, moduleCount: 0, modules: [] };
+}
+
+// Inline coverage bar — width % of `pct`, brand-tinted track, magenta fill.
+function CovBar({ pct, color, height }) {
+  const w = Math.max(0, Math.min(100, Math.round(pct || 0)));
+  const h = height || 4;
+  const fill = color || BRAND.magenta;
+  return (
+    <div style={{ background: BRAND.grey2, borderRadius: 999, height: h, overflow: "hidden", width: "100%" }}>
+      <div style={{ background: fill, height: "100%", width: w + "%", borderRadius: 999, transition: "width 200ms" }}/>
+    </div>
+  );
+}
+
+// Per-module heatmap row: a grid of small cells, one per module, colored by
+// density (fraction of that module's sessions tagged with this MEPO/AOC/thread).
+function ModuleHeatmapRow({ counts, color }) {
+  const cov = getCoverageMaps();
+  const mods = cov.modules;
+  const accent = color || BRAND.magenta;
+  return (
+    <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+      {mods.map((m) => {
+        const total = cov.modTotals[m.id] || 0;
+        const hit = (counts && counts[m.id]) || 0;
+        const pct = total ? hit / total : 0;
+        // alpha 0.08 (no hits) → 1.0 (everything)
+        const a = hit === 0 ? 0.08 : Math.max(0.25, pct);
+        const bg = hexWithAlpha(accent, a);
+        return (
+          <div key={m.id} title={`${m.short || m.name} · ${hit}/${total}`}
+            style={{ background: bg, color: a > 0.55 ? "#fff" : BRAND.ink, fontSize: 9, fontWeight: 700, padding: "3px 6px", borderRadius: 4, letterSpacing: 0.2, lineHeight: 1.2 }}>
+            {m.short || m.id}
+            {hit > 0 && <span style={{ marginLeft: 3, opacity: 0.8, fontWeight: 600 }}>{hit}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+function hexWithAlpha(hex, a) {
+  // Accepts #RRGGBB or named brand color (already #RRGGBB).
+  const m = (hex || "").match(/^#?([a-f0-9]{6})$/i);
+  if (!m) return hex;
+  const r = parseInt(m[1].slice(0, 2), 16);
+  const g = parseInt(m[1].slice(2, 4), 16);
+  const b = parseInt(m[1].slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a.toFixed(2)})`;
+}
+
 function MobileTabBar({ active, onChange, savedCount }) {
-  const items = [
+  const items = IS_DIRECTORS ? [
+    { id: "search",    label: "ASCEND",     icon: IconSearch },
+    { id: "aocthreads", label: "AOC/Threads", icon: IconBook },
+    { id: "mepo",      label: "MEPOs",      icon: IconTarget },
+    { id: "calendar",  label: "Calendar",   icon: IconCal },
+  ] : [
     { id: "search",    label: "ASCEND",   icon: IconSearch },
     { id: "electives", label: "Electives", icon: IconBook },
-    { id: "calendar",  label: "Calendar", icon: IconCal },
+    { id: "mepo",      label: "CA/MEPO",  icon: IconTarget },
     { id: "saved",     label: "Saved",    icon: IconBookmark, badge: savedCount },
   ];
   return (
@@ -41450,16 +41476,514 @@ function MobileTabBar({ active, onChange, savedCount }) {
           return (
             <button key={it.id} onClick={() => onChange(it.id)}
                     style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0", border: "none", background: "transparent", cursor: "pointer", position: "relative" }}>
-              <div style={{ background: on ? BRAND.cyanTint : "transparent", padding: "4px 18px", borderRadius: 999, position: "relative" }}>
-                <it.icon size={22} stroke={on ? BRAND.cyan : BRAND.grey11} sw={on ? 2.2 : 1.8}/>
+              <div style={{ background: on ? TAB_ACCENT_TINT : "transparent", padding: "4px 18px", borderRadius: 999, position: "relative" }}>
+                <it.icon size={22} stroke={on ? TAB_ACCENT : BRAND.grey11} sw={on ? 2.2 : 1.8}/>
                 {it.badge ? (
                   <div style={{ position: "absolute", top: -2, right: 8, background: BRAND.magenta, color: "#fff", borderRadius: 999, minWidth: 16, height: 16, padding: "0 4px", fontSize: 10, fontWeight: 700, display: "grid", placeItems: "center", border: "2px solid #fff" }}>{it.badge}</div>
                 ) : null}
               </div>
-              <div style={{ fontSize: 11, color: on ? BRAND.cyan : BRAND.grey11, fontWeight: on ? 600 : 500 }}>{it.label}</div>
+              <div style={{ fontSize: 11, color: on ? TAB_ACCENT : BRAND.grey11, fontWeight: on ? 600 : 500 }}>{it.label}</div>
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── AOC / Threads (mobile, directors only) ────────────────────
+// Hub of all 4 AOCs and 8 canonical threads with coverage %. Tap any tile
+// for a per-module heatmap + session list.
+function MobileAocThreadsTab({ onOpenSession }) {
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  const [picked, setPicked] = useStateMA(null); // { kind: "aoc"|"thread", id, label }
+  const cov = getCoverageMaps();
+  const AOC_INFO = [
+    { code: "HDS", label: "Healthcare Delivery Science",            color: BRAND.cyanDeep },
+    { code: "SSD", label: "Scientific & Scholarly Discovery",       color: BRAND.violet },
+    { code: "LPI", label: "Leadership & Professional Identity",     color: BRAND.magenta },
+    { code: "PCA", label: "Patient-Centered Advocacy",              color: "#1F8A5B" },
+  ];
+  const threads = (window.CANONICAL_THREADS || []).slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+  // Detail page for a chosen tag
+  if (picked) {
+    return <AocThreadDetail picked={picked} onBack={() => setPicked(null)} onOpenSession={onOpenSession}/>;
+  }
+
+  // Hub: show AOCs section then Threads section
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 18 }}>
+        <div style={{ padding: "10px 16px 4px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>AOC / Threads</div>
+        </div>
+        <div style={{ padding: "0 16px", fontSize: 13, opacity: 0.9, marginTop: 4 }}>
+          Cross-cutting coverage across Phase 1
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 18px", WebkitOverflowScrolling: "touch" }}>
+        {/* AOCs */}
+        <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px" }}>
+          Areas of Concentration · {AOC_INFO.length}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
+          {AOC_INFO.map((a) => {
+            const total = cov.aocTotal[a.code] || 0;
+            const pct = cov.grandTotal ? (total / cov.grandTotal) * 100 : 0;
+            return (
+              <button key={a.code} onClick={() => setPicked({ kind: "aoc", id: a.code, label: a.label, color: a.color })}
+                style={{ background: "#fff", border: "1px solid " + BRAND.grey2, borderRadius: 12, padding: "12px 12px", textAlign: "left", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: a.color, fontWeight: 700, letterSpacing: 0.3 }}>{a.code}</div>
+                  <div style={{ fontSize: 11, color: BRAND.grey11, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{pct.toFixed(1)}%</div>
+                </div>
+                <div style={{ fontSize: 12.5, color: BRAND.ink, fontWeight: 600, lineHeight: 1.3, minHeight: 32 }}>{a.label}</div>
+                <CovBar pct={pct} color={a.color}/>
+                <div style={{ fontSize: 11, color: BRAND.grey11 }}>{total} session{total === 1 ? "" : "s"}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Threads */}
+        <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px" }}>
+          Curricular Threads · {threads.length}
+        </div>
+        <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+          {threads.map((t, i) => {
+            const total = cov.threadTotal[t.id] || 0;
+            const pct = cov.grandTotal ? (total / cov.grandTotal) * 100 : 0;
+            return (
+              <button key={t.id} onClick={() => setPicked({ kind: "thread", id: t.id, label: t.name, color: BRAND.cyanDeep })}
+                style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 14px", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: BRAND.ink }}>{t.name}</div>
+                  <div style={{ fontSize: 11, color: BRAND.grey11, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{total} · {pct.toFixed(1)}%</div>
+                  <IconChevR size={14} stroke={BRAND.grey3} sw={2}/>
+                </div>
+                <CovBar pct={pct} color={BRAND.cyanDeep}/>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// AOC/Thread detail: shows summary, module heatmap, and the session list.
+function AocThreadDetail({ picked, onBack, onOpenSession }) {
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  const cov = getCoverageMaps();
+  const C = window.CURRICULUM || {};
+  const S = window.SESSIONS || {};
+  const modById = {};
+  for (const m of (C.MODULES || [])) modById[m.id] = m;
+
+  // Build counts + session list
+  let counts = {};
+  let sessions = [];
+  if (picked.kind === "aoc") {
+    counts = cov.aocByMod[picked.id] || {};
+    for (const m of (C.MODULES || [])) {
+      const pack = S[m.id]; if (!pack) continue;
+      for (const s of (pack.sessions || [])) {
+        if ((s.aoc || "").toUpperCase() === picked.id) {
+          sessions.push({ mod: m, session: s });
+        }
+      }
+    }
+  } else {
+    counts = cov.threadByMod[picked.id] || {};
+    const def = (window.CANONICAL_THREADS || []).find((t) => t.id === picked.id);
+    if (def) {
+      for (const tag of (def.sessions || [])) {
+        const mod = modById[tag.modId]; if (!mod) continue;
+        const pack = S[mod.id]; if (!pack) continue;
+        const sess = (pack.sessions || []).find((s) => s.n === tag.n);
+        if (sess) sessions.push({ mod, session: sess });
+      }
+    }
+  }
+  // Sort sessions by module name then session title
+  sessions.sort((a, b) => (a.mod.name || "").localeCompare(b.mod.name || "") || (a.session.title || "").localeCompare(b.session.title || ""));
+  const total = sessions.length;
+  const pct = cov.grandTotal ? (total / cov.grandTotal) * 100 : 0;
+  const moduleCount = Object.keys(counts).length;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
+      <div style={{ background: picked.color || BRAND.cyanDeep, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 16, borderBottom: "3px solid " + BRAND.magenta }}>
+        <div style={{ padding: "10px 8px 6px", display: "flex", alignItems: "center", gap: 4 }}>
+          <button onClick={onBack} style={{ background: "transparent", border: "none", padding: 8, color: "#fff", cursor: "pointer", display: "grid", placeItems: "center", WebkitTapHighlightColor: "rgba(255,255,255,0.2)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: 0.9 }}>
+            {picked.kind === "aoc" ? "Area of Concentration" : "Curricular Thread"}
+          </div>
+        </div>
+        <div style={{ padding: "0 16px" }}>
+          <div style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.25 }}>{picked.label}</div>
+          <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 8 }}>
+            <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{pct.toFixed(1)}%</div>
+            <div style={{ fontSize: 12.5, opacity: 0.9 }}>· {total} session{total === 1 ? "" : "s"} across {moduleCount} module{moduleCount === 1 ? "" : "s"}</div>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <CovBar pct={pct} color="#fff" height={5}/>
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 18px", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: "14px 14px", marginBottom: 14, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+          <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Module heatmap</div>
+          <ModuleHeatmapRow counts={counts} color={picked.color || BRAND.cyanDeep}/>
+        </div>
+        <div style={{ fontSize: 11, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", padding: "4px 4px 8px" }}>
+          Sessions · {sessions.length}
+        </div>
+        {sessions.length === 0 ? (
+          <div style={{ background: "#fff", borderRadius: 12, padding: "30px 22px", textAlign: "center", color: BRAND.grey11 }}>
+            No sessions tagged yet.
+          </div>
+        ) : (
+          <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+            {sessions.map((r, i) => {
+              // Build the item shape SearchResultDetail / SessionDetailBody expects.
+              const slos = (r.session.objectives && r.session.objectives.length)
+                ? r.session.objectives.map((o) => o.text || o.slo).filter(Boolean)
+                : (r.session.slos || []).filter(Boolean);
+              const item = {
+                kind: "Session", id: r.session.id,
+                title: r.session.title,
+                sub: `${r.mod.short || r.mod.id}${r.session.week ? " · Week " + r.session.week : ""}${r.session.type ? " · " + r.session.type : ""}`,
+                meta: r.session.duration ? r.session.duration + " min" : "",
+                session: r.session, moduleId: r.mod.id, moduleShort: r.mod.short || r.mod.id, slos,
+              };
+              return (
+              <button key={r.mod.id + ":" + (r.session.n || i)} onClick={() => onOpenSession && onOpenSession(item)}
+                style={{ display: "flex", flexDirection: "column", gap: 3, padding: "11px 14px", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase" }}>
+                  {r.mod.short || r.mod.name}{r.session.week ? " · Wk " + r.session.week : ""}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: BRAND.sessionTitle || "#0B3B7A", lineHeight: 1.3 }}>{r.session.title}</div>
+                  <IconChevR size={14} stroke={BRAND.grey3} sw={2}/>
+                </div>
+              </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Leadership Directory (mobile, directors only) ────────────
+// Renders the curated leadership directory (window.CA_DIRECTORY) as a
+// phone-friendly grouped list. Search filters across name, role, section.
+function MobileCalendarTab() {
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  const all = (typeof window !== "undefined" && (window.ASCEND_CALENDAR_ALL || window.ASCEND_CALENDAR_2026_27)) || [];
+  const CLASS_OPTIONS = [
+    { id: "all", label: "All classes" },
+    { id: "M1",  label: "Class of 2030 (M1)" },
+    { id: "M2",  label: "Class of 2029 (M2)" },
+    { id: "M3",  label: "Class of 2028 (M3)" },
+    { id: "M4",  label: "Class of 2027 (M4)" },
+  ];
+  // Class pill: different shape + color per class so the ALL view shows at a
+  // glance which class each event belongs to. Shapes are intentionally
+  // distinct (circle / rounded-square / pill / diamond) to be readable
+  // without color (a11y).
+  const CLASS_PILL = {
+    M1: { color: "#008CC0", bg: "rgba(0,140,192,0.14)",  shape: "circle"  },
+    M2: { color: "#221F72", bg: "rgba(34,31,114,0.12)",  shape: "rounded" },
+    M3: { color: "#D80B8C", bg: "rgba(216,11,140,0.12)", shape: "pill"    },
+    M4: { color: "#58595B", bg: "rgba(88,89,91,0.14)",   shape: "diamond" },
+  };
+  function ClassPill({ cls }) {
+    const p = CLASS_PILL[cls];
+    if (!p) return null;
+    if (p.shape === "diamond") {
+      // Rotated square — needs an inner wrapper for un-rotated text.
+      return (
+        <span style={{ display: "inline-grid", placeItems: "center", width: 22, height: 22, flexShrink: 0 }}>
+          <span style={{ width: 16, height: 16, background: p.bg, border: "1.5px solid " + p.color, transform: "rotate(45deg)", borderRadius: 2 }}/>
+          <span style={{ position: "absolute", fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: 0.2 }}>{cls}</span>
+        </span>
+      );
+    }
+    const radius = p.shape === "circle" ? "50%" : p.shape === "rounded" ? 4 : 999;
+    const px = p.shape === "circle" ? 5 : p.shape === "rounded" ? 6 : 8;
+    const w = p.shape === "circle" ? 22 : "auto";
+    const h = p.shape === "circle" ? 22 : "auto";
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        background: p.bg, color: p.color, fontWeight: 700,
+        fontSize: 9, letterSpacing: 0.3, padding: p.shape === "circle" ? 0 : `2px ${px}px`,
+        borderRadius: radius, border: "1.5px solid " + p.color,
+        width: w, height: h, minWidth: w, lineHeight: 1, flexShrink: 0,
+      }}>{cls}</span>
+    );
+  }
+  const [classFilter, setClassFilter] = useStateMA("all");
+  const KIND_COLOR = {
+    module:     { bg: "rgba(0,174,239,0.10)",   chip: BRAND.cyanDeep,    label: "Module" },
+    exam:       { bg: "rgba(184,43,30,0.10)",   chip: BRAND.bad,         label: "Exam" },
+    osce:       { bg: "rgba(34,31,114,0.10)",   chip: BRAND.violet,      label: "OSCE" },
+    holiday:    { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "Holiday" },
+    break:      { bg: "rgba(31,138,75,0.10)",   chip: "#1F8A4C",         label: "Break" },
+    ceremony:   { bg: "rgba(216,11,140,0.10)",  chip: BRAND.magenta,     label: "Ceremony" },
+    transition: { bg: "rgba(192,38,211,0.10)",  chip: "#C026D3",         label: "Transition" },
+    block:      { bg: "rgba(0,140,192,0.10)",   chip: BRAND.cyanDeep,    label: "Block" },
+    other:      { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "" },
+  };
+  // Filter
+  const filtered = useMemoMA(() => {
+    if (classFilter === "all") return all;
+    return all.filter((e) => e.className === classFilter);
+  }, [all, classFilter]);
+  // Group by month
+  const byMonth = useMemoMA(() => {
+    const m = new Map();
+    for (const e of filtered) {
+      const monthKey = e.date.slice(0, 7); // "2026-08"
+      if (!m.has(monthKey)) m.set(monthKey, []);
+      m.get(monthKey).push(e);
+    }
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filtered]);
+
+  // Auto-scroll to the current month on mount so the calendar opens to "today".
+  // Falls back to the first month if today is outside the AY range.
+  const scrollHostRef = React.useRef(null);
+  const monthRefs = React.useRef({});
+  React.useEffect(() => {
+    // requestAnimationFrame ensures the DOM has painted before we measure
+    // offsetTop / getBoundingClientRect.
+    const handle = window.requestAnimationFrame(() => {
+      const now = new Date();
+      const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const months = byMonth.map((b) => b[0]);
+      let target = months.find((m) => m === cur);
+      if (!target) target = months.find((m) => m > cur);
+      if (!target) target = months[months.length - 1];
+      if (!target) return;
+      const el = monthRefs.current[target];
+      const host = scrollHostRef.current;
+      if (!el || !host) return;
+      // Compute offset relative to the scroll host using rects, which is
+      // robust to whatever positioned ancestor the element sits inside.
+      const hostRect = host.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const top = (elRect.top - hostRect.top) + host.scrollTop - 8;
+      host.scrollTop = Math.max(0, top);
+    });
+    return () => window.cancelAnimationFrame(handle);
+  }, [byMonth, classFilter]);
+  function fmtDate(iso) {
+    const [y, mo, d] = iso.split("-").map(Number);
+    const dt = new Date(y, mo - 1, d);
+    return { day: d, wd: dt.toLocaleString(undefined, { weekday: "short" }) };
+  }
+  function fmtRange(start, end) {
+    if (!end || end === start) return "";
+    const a = fmtDate(start), b = fmtDate(end);
+    return ` → ${b.day}`;
+  }
+  function fmtMonth(key) {
+    // key is "YYYY-MM"
+    const [y, mo] = key.split("-").map(Number);
+    return new Date(y, mo - 1, 1)
+      .toLocaleString(undefined, { month: "long", year: "numeric" })
+      .toUpperCase();
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
+      {/* App bar */}
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
+        <div style={{ padding: "10px 16px 8px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Academic Calendar</div>
+        </div>
+        <div style={{ padding: "0 16px", fontSize: 12.5, opacity: 0.9, marginBottom: 8 }}>AY 2025–26 & 2026–27 · ISMMS MD Program</div>
+        {/* Class chips */}
+        <div style={{ padding: "0 12px", display: "flex", gap: 5, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          {CLASS_OPTIONS.map((c) => {
+            const on = classFilter === c.id;
+            return (
+              <button key={c.id} onClick={() => setClassFilter(c.id)}
+                style={{
+                  flex: "0 0 auto", fontSize: 11.5, fontWeight: 600, padding: "5px 11px", borderRadius: 999,
+                  border: "1px solid " + (on ? "#fff" : "rgba(255,255,255,0.5)"),
+                  background: on ? "#fff" : "transparent",
+                  color: on ? (IS_DIRECTORS ? "#C026D3" : BRAND.cyanDeep) : "#fff",
+                  cursor: "pointer", letterSpacing: 0.04, fontFamily: sans, whiteSpace: "nowrap",
+                }}>{c.label}</button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Body */}
+      <div ref={scrollHostRef} style={{ flex: 1, overflowY: "auto", padding: "14px 14px 18px", WebkitOverflowScrolling: "touch" }}>
+        {byMonth.length === 0 && (
+          <div style={{ background: "#fff", borderRadius: 12, padding: "30px 22px", textAlign: "center", color: BRAND.grey11 }}>
+            No events for this filter.
+          </div>
+        )}
+        {byMonth.map(([monthKey, events]) => (
+          <div key={monthKey} ref={(el) => { monthRefs.current[monthKey] = el; }} style={{ marginBottom: 16, scrollMarginTop: 12 }}>
+            <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px", display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span>{fmtMonth(monthKey)}</span>
+              <span style={{ color: BRAND.grey7, fontWeight: 600 }}>· {events.length}</span>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+              {events.map((ev, i) => {
+                const d = fmtDate(ev.date);
+                const range = fmtRange(ev.date, ev.end);
+                const k = KIND_COLOR[ev.kind] || KIND_COLOR.other;
+                return (
+                  <div key={ev.date + ":" + ev.label + ":" + i} style={{
+                    display: "flex", alignItems: "stretch", gap: 0, borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2,
+                  }}>
+                    {/* Date column */}
+                    <div style={{
+                      flex: "0 0 56px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      padding: "10px 4px", background: k.bg, borderRight: "1px solid " + BRAND.grey2,
+                    }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: k.chip, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{d.day}</div>
+                      <div style={{ fontSize: 9.5, color: k.chip, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", marginTop: 2 }}>{d.wd}</div>
+                      {range && <div style={{ fontSize: 9, color: BRAND.grey11, marginTop: 3, fontWeight: 600 }}>{range}</div>}
+                    </div>
+                    {/* Content */}
+                    <div style={{ flex: 1, padding: "11px 12px", minWidth: 0 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                        {k.label && (
+                          <span style={{ fontSize: 9, color: "#fff", background: k.chip, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3 }}>
+                            {k.label}
+                          </span>
+                        )}
+                        {ev.restricted && (
+                          <span title="Restricted date — no planned absences"
+                            style={{ fontSize: 9, color: BRAND.bad, background: "rgba(184,43,30,0.10)", fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3 }}>
+                            Restricted
+                          </span>
+                        )}
+                        {ev.className && classFilter === "all" && (
+                          <ClassPill cls={ev.className}/>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 13.5, color: BRAND.ink, lineHeight: 1.35, fontWeight: 600 }}>{ev.label}</div>
+                      {ev.section && (
+                        <div style={{ fontSize: 11, color: BRAND.grey11, marginTop: 3, fontStyle: "italic" }}>{ev.section}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {/* Legend */}
+        <div style={{ background: "#fff", borderRadius: 12, padding: "12px 14px", marginTop: 4, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+          <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Legend</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {Object.entries(KIND_COLOR).filter(([k, v]) => v.label).map(([k, v]) => (
+              <div key={k} style={{ fontSize: 11, color: BRAND.ink2, background: v.bg, padding: "2px 8px", borderRadius: 6, fontWeight: 600 }}>
+                <span style={{ color: v.chip, fontWeight: 700, marginRight: 4 }}>●</span>
+                {v.label}
+              </div>
+            ))}
+            <div style={{ fontSize: 11, color: BRAND.bad, background: "rgba(184,43,30,0.10)", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>
+              ★ Restricted = no planned absences
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Leadership Directory (mobile, directors only) ────────────
+// Renders the curated leadership directory (window.CA_DIRECTORY) as a
+// phone-friendly grouped list. Search filters across name, role, section.
+function MobileDirectoryTab() {
+  const directory = (typeof window !== "undefined" && window.CA_DIRECTORY) || [];
+  const [q, setQ] = useStateMA("");
+  const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const matchesPerson = (p, section) => {
+    if (tokens.length === 0) return true;
+    const hay = ((p.name || "") + " " + (p.role || "") + " " + (p.email || "") + " " + (section || "")).toLowerCase();
+    return tokens.every((t) => hay.includes(t));
+  };
+  const filtered = directory.map((sec) => ({
+    section: sec.section,
+    members: (sec.members || []).filter((p) => matchesPerson(p, sec.section)),
+  })).filter((sec) => sec.members.length > 0);
+  const total = filtered.reduce((n, s) => n + s.members.length, 0);
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
+        <div style={{ padding: "10px 16px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Leadership Directory</div>
+        </div>
+        <div style={{ padding: "0 14px" }}>
+          <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
+            <IconSearch size={18} stroke={BRAND.grey11} sw={2}/>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, role, or AOC" autoCorrect="off" autoCapitalize="off"
+              style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: sans, color: BRAND.ink, minWidth: 0 }}/>
+            {q ? (
+              <button onClick={() => setQ("")} style={{ background: "transparent", border: "none", padding: 0, color: BRAND.grey11, cursor: "pointer", display: "grid", placeItems: "center" }}>
+                <IconClose size={16} stroke={BRAND.grey11} sw={2}/>
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 16px", WebkitOverflowScrolling: "touch" }}>
+        {q && (
+          <div style={{ fontSize: 12, color: BRAND.grey11, marginBottom: 10, padding: "0 4px" }}>
+            {total} match{total === 1 ? "" : "es"}
+          </div>
+        )}
+        {filtered.length === 0 ? (
+          <div style={{ background: "#fff", borderRadius: 12, padding: "30px 22px", textAlign: "center", color: BRAND.grey11, fontSize: 13 }}>
+            No people matched “{q}”.
+          </div>
+        ) : (
+          filtered.map((sec) => (
+            <div key={sec.section} style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10.5, color: BRAND.magenta, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", padding: "0 4px 6px" }}>
+                {sec.section} · {sec.members.length}
+              </div>
+              <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                {sec.members.map((p, i) => (
+                  <div key={p.name + i} style={{ padding: "12px 14px", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: BRAND.ink, lineHeight: 1.3 }}>{p.name}</div>
+                    {p.role && <div style={{ fontSize: 12, color: BRAND.ink2, marginTop: 3, lineHeight: 1.4 }}>{p.role}</div>}
+                    {p.email && (
+                      <a href={`mailto:${p.email}`} style={{ display: "inline-block", marginTop: 6, fontSize: 11.5, color: BRAND.cyanDeep, textDecoration: "none", fontWeight: 600 }}>{p.email}</a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+        {/* Continue in desktop link */}
+        <div style={{ marginTop: 8, padding: "12px 14px", background: "#fff", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ fontSize: 12, color: BRAND.grey11, lineHeight: 1.4 }}>
+            Full Office of Curricular Affairs view, with bios and committee assignments, is on desktop.
+          </div>
+          <a href="?view=desktop" style={{ flex: "0 0 auto", fontSize: 11.5, fontWeight: 700, padding: "7px 11px", borderRadius: 6, background: BRAND.magenta, color: "#fff", textDecoration: "none", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>OPEN DESKTOP</a>
+        </div>
       </div>
     </div>
   );
@@ -41549,7 +42073,7 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
       {/* Cyan app bar */}
-      <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px 12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
@@ -41955,7 +42479,7 @@ function SavedList({ savedSet, onOpen, onToggleSave, onGoBrowse }) {
   const sans = "'Inter Tight', system-ui, sans-serif";
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
-      <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 18 }}>
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 18 }}>
         <div style={{ padding: "10px 16px 4px", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
           <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Saved</div>
@@ -42295,10 +42819,10 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, s
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
       {/* Cyan app bar */}
-      <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
         <div style={{ padding: "10px 16px 12px", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
-          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>ASCEND Curriculum</div>
+          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>{(typeof window !== "undefined" && window.DASHBOARD_LABEL) || "ASCEND Curriculum"}</div>
         </div>
         <div style={{ padding: "0 14px" }}>
           <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
@@ -42630,7 +43154,7 @@ function SearchResultDetail({ item, onBack, onOpenItem }) {
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px 18px", marginTop: -14, background: BRAND.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, WebkitOverflowScrolling: "touch" }}>
         {item.kind === "Session"  && <SessionDetailBody item={item} onOpenItem={onOpenItem}/>}
         {item.kind === "Module"   && <ModuleDetailBody  item={item} onOpenItem={onOpenItem}/>}
-        {item.kind === "MEPO"     && <MepoDetailBody    item={item}/>}
+        {item.kind === "MEPO"     && <MepoDetailBody    item={item} onOpenItem={onOpenItem}/>}
         {item.kind === "MLO"      && <MloDetailBody     item={item}/>}
       </div>
     </div>
@@ -42935,19 +43459,96 @@ function ModuleDetailBody({ item, onOpenItem }) {
     </>
   );
 }
-function MepoDetailBody({ item }) {
+function MepoDetailBody({ item, onOpenItem }) {
   const me = item.payload && item.payload.mepo;
   if (!me) return null;
+  const cov = getMepoCoverage(me.n);
+  const covMaps = getCoverageMaps();
+  // Build a per-module counts object from cov.modules array
+  const counts = {};
+  for (const entry of (cov.modules || [])) {
+    if (entry && typeof entry === "object") {
+      counts[entry.id || entry.moduleId || entry] = entry.sessionCount || entry.count || 1;
+    } else if (typeof entry === "string") {
+      counts[entry] = (counts[entry] || 0) + 1;
+    }
+  }
+  const totalSessions = covMaps.grandTotal || 0;
+  const pct = totalSessions ? (cov.sessionCount / totalSessions) * 100 : 0;
+
+  // Build the clickable session list: walk every module's session pack and
+  // pick sessions whose MLOs aggregate to this MEPO.
+  const sessions = [];
+  const C = window.CURRICULUM || {};
+  const S = window.SESSIONS || {};
+  for (const m of (C.MODULES || [])) {
+    const pack = S[m.id]; if (!pack) continue;
+    for (const s of (pack.sessions || [])) {
+      const mepoCodes = new Set((s.mepo || s.mepos || []).map(String));
+      if (mepoCodes.has(me.code) || mepoCodes.has("MEPO " + me.n) || mepoCodes.has(String(me.n))) {
+        sessions.push({ mod: m, session: s });
+      }
+    }
+  }
+  sessions.sort((a, b) => (a.mod.name || "").localeCompare(b.mod.name || "") || (a.session.title || "").localeCompare(b.session.title || ""));
+
   return (
-    <InfoBlock label="MEPO">
-      <Row k="Code"   v={me.code || "—"}/>
-      <Row k="Title"  v={me.title || "—"}/>
-      <Row k="Domain" v={me.domain || "—"}/>
-      {me.domainCode && <Row k="Domain code" v={me.domainCode}/>}
-      {me.description && (
-        <div style={{ paddingTop: 12, fontSize: 13.5, color: BRAND.ink2, lineHeight: 1.5 }}>{me.description}</div>
+    <>
+      <InfoBlock label="MEPO">
+        <Row k="Code"   v={me.code || "—"}/>
+        <Row k="Title"  v={me.title || "—"}/>
+        <Row k="Domain" v={me.domain || "—"}/>
+        {me.domainCode && <Row k="Domain code" v={me.domainCode}/>}
+        {me.description && (
+          <div style={{ paddingTop: 12, fontSize: 13.5, color: BRAND.ink2, lineHeight: 1.5 }}>{me.description}</div>
+        )}
+      </InfoBlock>
+      <InfoBlock label={"Coverage · " + pct.toFixed(1) + "%"}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, paddingTop: 4 }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: cov.sessionCount === 0 ? BRAND.bad : BRAND.violet, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{cov.sessionCount}</div>
+          <div style={{ fontSize: 12.5, color: BRAND.grey11 }}>session{cov.sessionCount === 1 ? "" : "s"} across {cov.moduleCount} module{cov.moduleCount === 1 ? "" : "s"}</div>
+        </div>
+        <div style={{ paddingTop: 10 }}>
+          <CovBar pct={pct} color={cov.sessionCount === 0 ? BRAND.bad : BRAND.violet} height={6}/>
+        </div>
+        {Object.keys(counts).length > 0 && (
+          <div style={{ paddingTop: 14 }}>
+            <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}>Module heatmap</div>
+            <ModuleHeatmapRow counts={counts} color={BRAND.violet}/>
+          </div>
+        )}
+      </InfoBlock>
+      {sessions.length > 0 && (
+        <InfoBlock label={"Sessions · " + sessions.length}>
+          <div style={{ marginTop: 4, marginLeft: -8, marginRight: -8 }}>
+            {sessions.map((r, i) => {
+              const slos = (r.session.objectives && r.session.objectives.length)
+                ? r.session.objectives.map((o) => o.text || o.slo).filter(Boolean)
+                : (r.session.slos || []).filter(Boolean);
+              const sItem = {
+                kind: "Session", id: r.session.id,
+                title: r.session.title,
+                sub: `${r.mod.short || r.mod.id}${r.session.week ? " · Week " + r.session.week : ""}${r.session.type ? " · " + r.session.type : ""}`,
+                meta: r.session.duration ? r.session.duration + " min" : "",
+                session: r.session, moduleId: r.mod.id, moduleShort: r.mod.short || r.mod.id, slos,
+              };
+              return (
+              <button key={r.mod.id + ":" + (r.session.n || i)} onClick={() => onOpenItem && onOpenItem(sItem)}
+                style={{ display: "flex", flexDirection: "column", gap: 3, padding: "10px 8px", border: "none", background: "transparent", borderTop: i === 0 ? "1px solid " + BRAND.grey2 : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase" }}>
+                  {r.mod.short || r.mod.name}{r.session.week ? " · Wk " + r.session.week : ""}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: BRAND.sessionTitle || "#0B3B7A", lineHeight: 1.3 }}>{r.session.title}</div>
+                  <IconChevR size={14} stroke={BRAND.grey3} sw={2}/>
+                </div>
+              </button>
+              );
+            })}
+          </div>
+        </InfoBlock>
       )}
-    </InfoBlock>
+    </>
   );
 }
 function MloDetailBody({ item }) {
@@ -42980,7 +43581,7 @@ function SessionsStub() {
   const sans = "'Inter Tight', system-ui, sans-serif";
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
-      <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 18 }}>
+      <div style={{ background: IS_DIRECTORS ? "#C026D3" : BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 18 }}>
         <div style={{ padding: "10px 16px 4px", display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
           <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Sessions</div>
@@ -42999,222 +43600,6 @@ function SessionsStub() {
     </div>
   );
 }
-
-// ─── Calendar tab (AY 2026-27) ───────────────────────────────
-function MobileCalendarTab() {
-  const sans = "'Inter Tight', system-ui, sans-serif";
-  const all = (typeof window !== "undefined" && (window.ASCEND_CALENDAR_ALL || window.ASCEND_CALENDAR_2026_27)) || [];
-  const CLASS_OPTIONS = [
-    { id: "all", label: "All classes" },
-    { id: "M1",  label: "Class of 2030 (M1)" },
-    { id: "M2",  label: "Class of 2029 (M2)" },
-    { id: "M3",  label: "Class of 2028 (M3)" },
-    { id: "M4",  label: "Class of 2027 (M4)" },
-  ];
-  // Class pill: different shape + color per class so the ALL view shows at a
-  // glance which class each event belongs to. Shapes are intentionally
-  // distinct (circle / rounded-square / pill / diamond) to be readable
-  // without color (a11y).
-  const CLASS_PILL = {
-    M1: { color: "#008CC0", bg: "rgba(0,140,192,0.14)",  shape: "circle"  },
-    M2: { color: "#221F72", bg: "rgba(34,31,114,0.12)",  shape: "rounded" },
-    M3: { color: "#D80B8C", bg: "rgba(216,11,140,0.12)", shape: "pill"    },
-    M4: { color: "#58595B", bg: "rgba(88,89,91,0.14)",   shape: "diamond" },
-  };
-  function ClassPill({ cls }) {
-    const p = CLASS_PILL[cls];
-    if (!p) return null;
-    if (p.shape === "diamond") {
-      // Rotated square — needs an inner wrapper for un-rotated text.
-      return (
-        <span style={{ display: "inline-grid", placeItems: "center", width: 22, height: 22, flexShrink: 0 }}>
-          <span style={{ width: 16, height: 16, background: p.bg, border: "1.5px solid " + p.color, transform: "rotate(45deg)", borderRadius: 2 }}/>
-          <span style={{ position: "absolute", fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: 0.2 }}>{cls}</span>
-        </span>
-      );
-    }
-    const radius = p.shape === "circle" ? "50%" : p.shape === "rounded" ? 4 : 999;
-    const px = p.shape === "circle" ? 5 : p.shape === "rounded" ? 6 : 8;
-    const w = p.shape === "circle" ? 22 : "auto";
-    const h = p.shape === "circle" ? 22 : "auto";
-    return (
-      <span style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        background: p.bg, color: p.color, fontWeight: 700,
-        fontSize: 9, letterSpacing: 0.3, padding: p.shape === "circle" ? 0 : `2px ${px}px`,
-        borderRadius: radius, border: "1.5px solid " + p.color,
-        width: w, height: h, minWidth: w, lineHeight: 1, flexShrink: 0,
-      }}>{cls}</span>
-    );
-  }
-  const [classFilter, setClassFilter] = useStateMA("all");
-  const KIND_COLOR = {
-    module:     { bg: "rgba(0,174,239,0.10)",   chip: BRAND.cyanDeep,    label: "Module" },
-    exam:       { bg: "rgba(184,43,30,0.10)",   chip: BRAND.bad,         label: "Exam" },
-    osce:       { bg: "rgba(34,31,114,0.10)",   chip: BRAND.violet,      label: "OSCE" },
-    holiday:    { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "Holiday" },
-    break:      { bg: "rgba(31,138,75,0.10)",   chip: "#1F8A4C",         label: "Break" },
-    ceremony:   { bg: "rgba(216,11,140,0.10)",  chip: BRAND.magenta,     label: "Ceremony" },
-    transition: { bg: "rgba(192,38,211,0.10)",  chip: "#C026D3",         label: "Transition" },
-    block:      { bg: "rgba(0,140,192,0.10)",   chip: BRAND.cyanDeep,    label: "Block" },
-    other:      { bg: "rgba(88,89,91,0.08)",    chip: BRAND.grey11,      label: "" },
-  };
-  // Filter
-  const filtered = useMemoMA(() => {
-    if (classFilter === "all") return all;
-    return all.filter((e) => e.className === classFilter);
-  }, [all, classFilter]);
-  // Group by month
-  const byMonth = useMemoMA(() => {
-    const m = new Map();
-    for (const e of filtered) {
-      const monthKey = e.date.slice(0, 7); // "2026-08"
-      if (!m.has(monthKey)) m.set(monthKey, []);
-      m.get(monthKey).push(e);
-    }
-    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [filtered]);
-
-  // Auto-scroll to the current month on mount so the calendar opens to "today".
-  // Falls back to the first month if today is outside the AY range.
-  const scrollHostRef = React.useRef(null);
-  const monthRefs = React.useRef({});
-  React.useEffect(() => {
-    const handle = window.requestAnimationFrame(() => {
-      const now = new Date();
-      const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const months = byMonth.map((b) => b[0]);
-      let target = months.find((m) => m === cur);
-      if (!target) target = months.find((m) => m > cur);
-      if (!target) target = months[months.length - 1];
-      if (!target) return;
-      const el = monthRefs.current[target];
-      const host = scrollHostRef.current;
-      if (!el || !host) return;
-      const hostRect = host.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      const top = (elRect.top - hostRect.top) + host.scrollTop - 8;
-      host.scrollTop = Math.max(0, top);
-    });
-    return () => window.cancelAnimationFrame(handle);
-  }, [byMonth, classFilter]);
-  function fmtDate(iso) {
-    const [y, mo, d] = iso.split("-").map(Number);
-    const dt = new Date(y, mo - 1, d);
-    return { day: d, wd: dt.toLocaleString(undefined, { weekday: "short" }) };
-  }
-  function fmtRange(start, end) {
-    if (!end || end === start) return "";
-    const a = fmtDate(start), b = fmtDate(end);
-    return ` → ${b.day}`;
-  }
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: BRAND.bg, fontFamily: sans, color: BRAND.ink, overflow: "hidden" }}>
-      {/* App bar */}
-      <div style={{ background: BRAND.cyan, color: "#fff", paddingTop: "max(env(safe-area-inset-top, 12px), 12px)", paddingBottom: 14 }}>
-        <div style={{ padding: "10px 16px 8px", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
-          <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Academic Calendar</div>
-        </div>
-        <div style={{ padding: "0 16px", fontSize: 12.5, opacity: 0.9, marginBottom: 8 }}>AY 2025–26 & 2026–27 · ISMMS MD Program</div>
-        {/* Class chips */}
-        <div style={{ padding: "0 12px", display: "flex", gap: 5, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          {CLASS_OPTIONS.map((c) => {
-            const on = classFilter === c.id;
-            return (
-              <button key={c.id} onClick={() => setClassFilter(c.id)}
-                style={{
-                  flex: "0 0 auto", fontSize: 11.5, fontWeight: 600, padding: "5px 11px", borderRadius: 999,
-                  border: "1px solid " + (on ? "#fff" : "rgba(255,255,255,0.5)"),
-                  background: on ? "#fff" : "transparent",
-                  color: on ? (BRAND.cyanDeep) : "#fff",
-                  cursor: "pointer", letterSpacing: 0.04, fontFamily: sans, whiteSpace: "nowrap",
-                }}>{c.label}</button>
-            );
-          })}
-        </div>
-      </div>
-      {/* Body */}
-      <div ref={scrollHostRef} style={{ flex: 1, overflowY: "auto", padding: "14px 14px 18px", WebkitOverflowScrolling: "touch" }}>
-        {byMonth.length === 0 && (
-          <div style={{ background: "#fff", borderRadius: 12, padding: "30px 22px", textAlign: "center", color: BRAND.grey11 }}>
-            No events for this filter.
-          </div>
-        )}
-        {byMonth.map(([monthKey, events]) => (
-          <div key={monthKey} ref={(el) => { monthRefs.current[monthKey] = el; }} style={{ marginBottom: 16, scrollMarginTop: 12 }}>
-            <div style={{ fontSize: 11, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, padding: "4px 4px 8px", display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span>{fmtMonth(monthKey)}</span>
-              <span style={{ color: BRAND.grey7, fontWeight: 600 }}>· {events.length}</span>
-            </div>
-            <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-              {events.map((ev, i) => {
-                const d = fmtDate(ev.date);
-                const range = fmtRange(ev.date, ev.end);
-                const k = KIND_COLOR[ev.kind] || KIND_COLOR.other;
-                return (
-                  <div key={ev.date + ":" + ev.label + ":" + i} style={{
-                    display: "flex", alignItems: "stretch", gap: 0, borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2,
-                  }}>
-                    {/* Date column */}
-                    <div style={{
-                      flex: "0 0 56px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      padding: "10px 4px", background: k.bg, borderRight: "1px solid " + BRAND.grey2,
-                    }}>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: k.chip, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{d.day}</div>
-                      <div style={{ fontSize: 9.5, color: k.chip, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", marginTop: 2 }}>{d.wd}</div>
-                      {range && <div style={{ fontSize: 9, color: BRAND.grey11, marginTop: 3, fontWeight: 600 }}>{range}</div>}
-                    </div>
-                    {/* Content */}
-                    <div style={{ flex: 1, padding: "11px 12px", minWidth: 0 }}>
-                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                        {k.label && (
-                          <span style={{ fontSize: 9, color: "#fff", background: k.chip, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3 }}>
-                            {k.label}
-                          </span>
-                        )}
-                        {ev.restricted && (
-                          <span title="Restricted date — no planned absences"
-                            style={{ fontSize: 9, color: BRAND.bad, background: "rgba(184,43,30,0.10)", fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "2px 6px", borderRadius: 3 }}>
-                            Restricted
-                          </span>
-                        )}
-                        {ev.className && classFilter === "all" && (
-                          <ClassPill cls={ev.className}/>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 13.5, color: BRAND.ink, lineHeight: 1.35, fontWeight: 600 }}>{ev.label}</div>
-                      {ev.section && (
-                        <div style={{ fontSize: 11, color: BRAND.grey11, marginTop: 3, fontStyle: "italic" }}>{ev.section}</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        {/* Legend */}
-        <div style={{ background: "#fff", borderRadius: 12, padding: "12px 14px", marginTop: 4, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-          <div style={{ fontSize: 10.5, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Legend</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {Object.entries(KIND_COLOR).filter(([k, v]) => v.label).map(([k, v]) => (
-              <div key={k} style={{ fontSize: 11, color: BRAND.ink2, background: v.bg, padding: "2px 8px", borderRadius: 6, fontWeight: 600 }}>
-                <span style={{ color: v.chip, fontWeight: 700, marginRight: 4 }}>●</span>
-                {v.label}
-              </div>
-            ))}
-            <div style={{ fontSize: 11, color: BRAND.bad, background: "rgba(184,43,30,0.10)", padding: "2px 8px", borderRadius: 6, fontWeight: 700 }}>
-              ★ Restricted = no planned absences
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 // ─── MEPO list tab ────────────────────────────────────────────
 // Replaces the old "Me / Profile" tab. Shows all canonical MEPOs grouped by
@@ -43268,14 +43653,30 @@ function MepoListTab({ onOpenMepo }) {
                   {g.domainCode ? g.domainCode + " · " : ""}{g.domain}
                 </div>
                 <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                  {g.items.map((me, i) => (
+                  {g.items.map((me, i) => {
+                    const cov = getMepoCoverage(me.n);
+                    const cv = window.CURRICULUM || {};
+                    const totalSessions = (cv.MEPO_STATS_TOTAL_SESSIONS) ||
+                      (cv.MODULES || []).reduce((n, m) => n + (((window.SESSIONS || {})[m.id] || {}).sessions || []).length, 0);
+                    const pct = totalSessions ? (cov.sessionCount / totalSessions) * 100 : 0;
+                    return (
                     <button key={me.code} onClick={() => onOpenMepo(me)}
-                      style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
-                      <div style={{ flex: "0 0 60px", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: BRAND.violet, fontWeight: 700, letterSpacing: 0.3, paddingTop: 1 }}>{me.code}</div>
-                      <div style={{ flex: 1, fontSize: 13.5, color: BRAND.ink, lineHeight: 1.45 }}>{me.title}</div>
-                      <IconChevR size={14} stroke={BRAND.grey3} sw={2} style={{ marginTop: 4, flexShrink: 0 }}/>
+                      style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 14px", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <div style={{ flex: "0 0 60px", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: BRAND.violet, fontWeight: 700, letterSpacing: 0.3, paddingTop: 1 }}>{me.code}</div>
+                        <div style={{ flex: 1, fontSize: 13.5, color: BRAND.ink, lineHeight: 1.45 }}>{me.title}</div>
+                        <div style={{ flex: "0 0 auto", fontSize: 11, fontWeight: 700, color: cov.sessionCount === 0 ? BRAND.bad : (pct < 1 ? BRAND.grey11 : BRAND.violet), fontVariantNumeric: "tabular-nums", paddingTop: 1 }}>{pct.toFixed(1)}%</div>
+                        <IconChevR size={14} stroke={BRAND.grey3} sw={2} style={{ marginTop: 4, flexShrink: 0 }}/>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 70 }}>
+                        <CovBar pct={pct} color={cov.sessionCount === 0 ? BRAND.bad : BRAND.violet}/>
+                        <div style={{ flex: "0 0 auto", fontSize: 10.5, color: BRAND.grey11, fontWeight: 600, whiteSpace: "nowrap" }}>
+                          {cov.sessionCount} session{cov.sessionCount === 1 ? "" : "s"} · {cov.moduleCount} module{cov.moduleCount === 1 ? "" : "s"}
+                        </div>
+                      </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -43535,6 +43936,10 @@ function MobileApp() {
     body = <SavedList savedSet={savedSet} onOpen={(code) => setDetailCode(code)} onToggleSave={toggleSave} onGoBrowse={() => switchTab("electives")}/>;
   } else if (tab === "mepo") {
     body = <MepoListTab onOpenMepo={openMepoFromList}/>;
+  } else if (tab === "directory") {
+    body = <MobileDirectoryTab/>;
+  } else if (tab === "aocthreads") {
+    body = <MobileAocThreadsTab onOpenSession={pushResult}/>;
   } else if (tab === "calendar") {
     body = <MobileCalendarTab/>;
   }
@@ -43554,7 +43959,7 @@ window.MobileApp = MobileApp;
 
 })();
 
-function StudentsRouter() {
+function DirectorsRouter() {
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const override = params && params.get("view");
   const getIsMobile = () => {
@@ -43570,30 +43975,24 @@ function StudentsRouter() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
   React.useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
+    const html = document.documentElement, body = document.body;
     const root = document.getElementById("root");
     if (isMobile) {
-      // Mobile root uses `height: 100%` and position absolute throughout; for
-      // that to compute non-zero we have to give html, body, and #root an
-      // explicit height. Otherwise the outermost mobile container collapses
-      // to 0px and the entire UI renders blank.
-      html.style.height = "100%";
-      body.style.height = "100%";
-      if (root) root.style.height = "100%";
-      body.style.margin = "0"; body.style.padding = "0"; body.style.background = "#F8F9FB"; body.style.overscrollBehavior = "none"; body.style.fontFamily = "'Inter Tight', system-ui, sans-serif";
+      html.style.overflow = "hidden"; body.style.overflow = "hidden";
+      if (root) root.style.height = "100vh";
+      body.style.margin = "0"; body.style.padding = "0"; body.style.background = "#F5F7FA";
+      body.style.overscrollBehavior = "none";
+      body.style.fontFamily = "'Inter Tight', system-ui, sans-serif";
     } else {
-      html.style.height = "";
-      body.style.height = "";
+      html.style.overflow = ""; body.style.overflow = "";
       if (root) root.style.height = "";
       body.style.margin = ""; body.style.padding = ""; body.style.background = ""; body.style.overscrollBehavior = ""; body.style.fontFamily = "";
     }
   }, [isMobile]);
   return isMobile ? <window.MobileApp /> : <window.AppShell />;
 }
-ReactDOM.createRoot(document.getElementById("root")).render(<StudentsRouter />);
-
-</script>
-<script type="text/babel" data-presets="env,react" src="related-sessions.js"></script>
+ReactDOM.createRoot(document.getElementById("root")).render(<DirectorsRouter />);
+  </script>
+  <script type="text/babel" data-presets="env,react" src="related-sessions.js"></script>
 </body>
 </html>
