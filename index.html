@@ -262,6 +262,7 @@ hr.sep { border: 0; border-top: 1px solid var(--grey-3); margin: 16px 0; }
 <script src="canonical-threads.js"></script>
 <script src="canonical-aocs.js"></script>
 <script src="jama-nutr-competencies.js"></script>
+<script src="ask-ascend.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -35790,9 +35791,14 @@ const TYPE_PILL = {
 function GlobalSearch({ open, onClose }) {
   const [q, setQ] = useStateGS("");
   const [committedQ, setCommittedQ] = useStateGS(""); // what's actually showing on results page
-  const [view, setView] = useStateGS("typeahead");    // "typeahead" | "results"
+  const [view, setView] = useStateGS("ask");          // Locked to "ask" — keyword mode retired
   const [activeIdx, setActiveIdx] = useStateGS(0);
   const [detailSession, setDetailSession] = useStateGS(null); // result item for opened session
+  // Ask-ASCEND (natural-language) state
+  const [askMode, setAskMode] = useStateGS(true);      // Locked: Ask ASCEND is the only mode
+  const [askLoading, setAskLoading] = useStateGS(false);
+  const [askResult, setAskResult] = useStateGS(null);  // { summary, picks: [...] } or null
+  const [askError, setAskError] = useStateGS(null);
   const inputRef = useRefGS(null);
 
   const index = useMemoGS(() => (open ? buildSearchIndex() : []), [open]);
@@ -35805,9 +35811,13 @@ function GlobalSearch({ open, onClose }) {
     if (open) {
       setQ("");
       setCommittedQ("");
-      setView("typeahead");
+      setView("ask");
       setActiveIdx(0);
       setDetailSession(null);
+      setAskMode(true);
+      setAskResult(null);
+      setAskError(null);
+      setAskLoading(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -35822,8 +35832,38 @@ function GlobalSearch({ open, onClose }) {
     setDetailSession(null);
   }
 
+  // Run an Ask-ASCEND natural-language query. Audience is inferred from the
+  // dashboard variant (STUDENT_VIEW flag), defaulting to "both" on directors.
+  async function runAsk(query) {
+    const text = (query ?? q).trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askAscend) {
+      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
+      setView("ask");
+      return;
+    }
+    setView("ask");
+    setAskLoading(true);
+    setAskError(null);
+    setAskResult(null);
+    setDetailSession(null);
+    try {
+      const audience = (typeof window !== "undefined" && window.STUDENT_VIEW) ? "student" : "both";
+      const res = await window.AskAscend.askAscend(text, { audience });
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+
   function onKeyTypeahead(e) {
     if (e.key === "Escape") { onClose(); return; }
+    if (askMode) {
+      if (e.key === "Enter") { e.preventDefault(); runAsk(); }
+      return;
+    }
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIdx((i) => Math.min(i + 1, liveResults.length - 1));
@@ -35838,6 +35878,14 @@ function GlobalSearch({ open, onClose }) {
   }
 
   function openItem(r) {
+    // Ask ASCEND picks come pre-hydrated from window.AskAscend (with modId,
+    // sessionN, kind, id) but without the `open` callback or full `session`
+    // reference the detail overlay needs. Resolve against the existing
+    // search index so click-throughs work identically.
+    if (r && r.kind && !r.open && !r.session) {
+      const match = index.find((it) => it.kind === r.kind && it.id === r.id);
+      if (match) r = match;
+    }
     if (r.kind === "Session") {
       setDetailSession(r);
       return;
@@ -35856,7 +35904,19 @@ function GlobalSearch({ open, onClose }) {
         padding: view === "typeahead" ? "80px 24px" : "40px 24px",
         fontFamily: "var(--font-sans)",
       }}
-      onClick={() => { if (!detailSession) onClose(); else setDetailSession(null); }}
+      onClick={() => {
+        // Outside-click dismiss policy:
+        // 1. If a session detail panel is open, close just that panel.
+        // 2. If Ask ASCEND has loaded, errored, or is mid-flight, KEEP the
+        //    modal open — users invested a query and shouldn't lose results
+        //    by tapping outside the dialog. They close explicitly via the
+        //    X button (or Esc).
+        // 3. Otherwise (typeahead with no committed work), dismiss as usual.
+        if (detailSession) { setDetailSession(null); return; }
+        if (askLoading || askResult || askError) return;
+        if (view === "results" && pageResults.length > 0) return;
+        onClose();
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -35873,8 +35933,10 @@ function GlobalSearch({ open, onClose }) {
           q={q} setQ={setQ}
           onKey={onKeyTypeahead}
           view={view}
-          onSubmit={() => commitSearch()}
-          onBackToTypeahead={() => { setView("typeahead"); setDetailSession(null); setTimeout(() => inputRef.current?.focus(), 30); }}
+          askMode={askMode}
+          /* onToggleAsk omitted — Ask ASCEND is the only mode */
+          onSubmit={() => askMode ? runAsk() : commitSearch()}
+          onBackToTypeahead={() => { setView("typeahead"); setDetailSession(null); setAskResult(null); setAskError(null); setTimeout(() => inputRef.current?.focus(), 30); }}
           onClose={onClose}
         />
 
@@ -35905,6 +35967,17 @@ function GlobalSearch({ open, onClose }) {
               query={committedQ}
               results={pageResults}
               onOpen={openItem}
+            />
+          )}
+
+          {view === "ask" && (
+            <AskAscendView
+              query={committedQ || q}
+              loading={askLoading}
+              error={askError}
+              result={askResult}
+              onOpen={openItem}
+              searchIndex={index}
             />
           )}
         </div>
@@ -35965,10 +36038,15 @@ function runSearch(index, q, forResultsPage) {
 // Header (search input + actions)
 // ---------------------------------------------------------------------------
 
-function SearchHeader({ inputRef, q, setQ, onKey, view, onSubmit, onBackToTypeahead, onClose }) {
+function SearchHeader({ inputRef, q, setQ, onKey, view, onSubmit, onBackToTypeahead, onClose, askMode, onToggleAsk }) {
+  // Ask-ASCEND mode swaps the placeholder and the icon to make the modal
+  // feel like a different mode — natural-language Q&A rather than typeahead.
+  const placeholder = askMode
+    ? "Ask anything about the ASCEND curriculum…"
+    : "Search sessions, modules, MEPOs, MLOs…";
   return (
     <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--grey-3)", display: "flex", alignItems: "center", gap: 10 }}>
-      {view === "results" && (
+      {(view === "results" || view === "ask") && (
         <button
           onClick={onBackToTypeahead}
           title="Back"
@@ -35978,21 +36056,46 @@ function SearchHeader({ inputRef, q, setQ, onKey, view, onSubmit, onBackToTypeah
           </svg>
         </button>
       )}
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--grey-11)" strokeWidth="2">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m21 21-4.3-4.3" />
-      </svg>
+      {askMode ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-cyan-deep)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+          <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+          <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--grey-11)" strokeWidth="2">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+      )}
       <input
         ref={inputRef}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={onKey}
-        placeholder="Search sessions, objectives, modules, MEPOs…"
+        placeholder={placeholder}
         style={{
           flex: 1, fontSize: 14, fontFamily: "var(--font-sans)",
           border: "none", outline: "none", background: "transparent",
         }}
       />
+      {onToggleAsk && (
+        <button
+          onClick={onToggleAsk}
+          title={askMode ? "Back to keyword search" : "Ask ASCEND — natural-language search"}
+          style={{
+            fontSize: 11, fontWeight: 600, padding: "6px 10px", borderRadius: 5,
+            border: "1px solid " + (askMode ? "var(--brand-cyan-deep)" : "var(--grey-3)"),
+            background: askMode ? "var(--brand-cyan-tint)" : "var(--paper)",
+            color: askMode ? "var(--brand-cyan-deep)" : "var(--grey-11)",
+            cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5,
+            letterSpacing: "0.04em",
+          }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+          </svg>
+          Ask ASCEND
+        </button>
+      )}
       <button
         onClick={onSubmit}
         disabled={!q.trim()}
@@ -36115,6 +36218,140 @@ function TypeaheadList({ q, results, activeIdx, setActiveIdx, onPick, onSubmit }
 // ---------------------------------------------------------------------------
 // Full results page
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// AskAscendView — natural-language search result body
+// ---------------------------------------------------------------------------
+// Rendered in the GlobalSearch modal when view === "ask". Shows a loading
+// spinner while window.AskAscend.askAscend is in flight, the model's
+// one-sentence summary, then a card per pick with the rationale and an
+// open-row click handler that drops into the regular openItem path.
+// ---------------------------------------------------------------------------
+function AskAscendView({ query, loading, error, result, onOpen, searchIndex }) {
+  if (!query && !loading && !result && !error) {
+    return (
+      <div style={{ padding: "60px 32px", textAlign: "center", color: "var(--grey-11)", fontFamily: "var(--font-sans)" }}>
+        <div style={{ fontSize: 28, marginBottom: 16, color: "var(--brand-cyan-deep)" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" style={{ display: "inline-block" }}>
+            <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+            <path d="M19.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>
+          </svg>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: "var(--ink-1)", marginBottom: 8 }}>Ask ASCEND</div>
+        <div style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 460, margin: "0 auto", color: "var(--grey-11)" }}>
+          Type a natural-language question about the curriculum and press Enter. Examples:
+        </div>
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, maxWidth: 460, marginLeft: "auto", marginRight: "auto", textAlign: "left" }}>
+          {[
+            "Where do students learn about nutrition counseling?",
+            "Which sessions teach disease prevention strategies?",
+            "Where is health maintenance covered in Phase 1?",
+            "Show me everything mapped to JAMA nutrition competencies.",
+          ].map((ex) => (
+            <div key={ex} style={{ fontSize: 12.5, color: "var(--ink-2)", padding: "8px 12px", background: "var(--grey-1)", borderRadius: 6, fontStyle: "italic" }}>
+              {ex}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div style={{ padding: "60px 32px", textAlign: "center", color: "var(--grey-11)", fontFamily: "var(--font-sans)" }}>
+        <div style={{ display: "inline-block", width: 28, height: 28, border: "3px solid var(--grey-2)", borderTopColor: "var(--brand-cyan-deep)", borderRadius: "50%", animation: "ask-spin 800ms linear infinite" }}></div>
+        <style>{`@keyframes ask-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <div style={{ marginTop: 14, fontSize: 13 }}>Asking ASCEND…</div>
+        <div style={{ marginTop: 4, fontSize: 11, color: "var(--grey-8)" }}>{query}</div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div style={{ padding: "40px 32px", color: "var(--bad)", fontFamily: "var(--font-sans)" }}>
+        <div style={{ fontWeight: 600, marginBottom: 6 }}>Couldn’t answer that.</div>
+        <div style={{ fontSize: 13, lineHeight: 1.5 }}>{error}</div>
+      </div>
+    );
+  }
+  if (!result) return null;
+  return (
+    <div style={{ padding: "20px 24px", fontFamily: "var(--font-sans)" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand-cyan-deep)", fontWeight: 700, marginBottom: 6 }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+        </svg>
+        Ask ASCEND
+      </div>
+      <div style={{ fontSize: 13, color: "var(--grey-11)", marginBottom: 4 }}>“{query}”</div>
+      {result.summary && (
+        <div style={{ fontSize: 15, color: "var(--ink-1)", lineHeight: 1.5, marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid var(--grey-2)" }}>
+          {result.summary}
+        </div>
+      )}
+      {result.picks && result.picks.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {result.picks.map((p, i) => {
+            // For Session picks, render the rich SessionResultCard used on
+            // the main search results page so the Ask ASCEND view feels
+            // complete (duration, type pill, week, SLO count, methods).
+            // Non-session picks (Module / MEPO / Thread / AOC) keep the
+            // compact card.
+            if (p.kind === "Session" && searchIndex) {
+              const hit = searchIndex.find((it) => it.kind === "Session" && it.id === p.id);
+              if (hit) {
+                const cardItem = { ...hit, jamas: p.jamas, jamaTheme: p.jamaTheme };
+                return (
+                  <div key={p.kind + ":" + p.id + ":" + i}>
+                    <SessionResultCard item={cardItem} rank={i + 1} onOpen={() => onOpen({ ...hit })} />
+                    {/* JAMA + WHY block below the card, sharing its width */}
+                    {(p.jamas && p.jamas.length > 0) ? (
+                      <div style={{ marginTop: 4, marginLeft: 56, marginRight: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+                        {p.jamas && p.jamas.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                            {p.jamas.map((c) => (
+                              <span key={c.n} title={c.text}
+                                className="pill cyan"
+                                style={{ fontSize: 10, padding: "1px 7px", whiteSpace: "nowrap" }}>
+                                JAMA #{c.n}{c.priority ? " ★" : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
+            }
+            return (
+              <button
+                key={p.kind + ":" + p.id + ":" + i}
+                onClick={() => onOpen({ ...p, open: p.open })}
+                style={{
+                  textAlign: "left", padding: "12px 14px",
+                  background: "var(--paper)", border: "1px solid var(--grey-3)", borderRadius: 8,
+                  cursor: "pointer", fontFamily: "var(--font-sans)",
+                  display: "flex", flexDirection: "column", gap: 4,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--grey-1)"; e.currentTarget.style.borderColor = "var(--brand-cyan)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--paper)"; e.currentTarget.style.borderColor = "var(--grey-3)"; }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--grey-11)", fontWeight: 600 }}>{p.kind}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-1)" }}>{p.label}</span>
+                </div>
+                {p.sub && <div style={{ fontSize: 11.5, color: "var(--grey-11)" }}>{p.sub}</div>}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: "var(--grey-11)", fontStyle: "italic" }}>No matches in the curriculum index.</div>
+      )}
+    </div>
+  );
+}
 
 function ResultsPage({ query, results, onOpen }) {
   const [filterKind, setFilterKind] = useStateGS("All");
@@ -36684,7 +36921,7 @@ function SideNavA({ view, setView, moduleId, setModuleId }) {
                 onClick={() => { setModuleId(m.id); setView("module"); }}>
                 <PhaseDot phase={m.phase} />
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.short}</span>
-                {m.real && <span className="badge" style={{ background: "var(--brand-cyan-tint)", color: "var(--brand-cyan-deep)" }}>Live</span>}
+                
               </div>
             ))}
           </div>
@@ -36797,8 +37034,7 @@ function OverviewA({ setView, setModuleId }) {
                 <td>
                   <div style={{ fontWeight: 600 }}>{m.name}</div>
                   <div style={{ fontSize: 11, color: "var(--grey-7)" }}>
-                    {m.real ? <span className="pill cyan" style={{ marginRight: 6 }}>Live</span>
-                            : <span className="synth-mark">synthesized</span>} · {m.weeks}w · n={m.cohort}
+                    {!m.real && <span className="synth-mark" style={{ marginRight: 6 }}>synthesized</span>}{m.weeks}w · n={m.cohort}
                   </div>
                 </td>
                 <td>{m.year}</td>
@@ -38837,7 +39073,7 @@ function VariantD() {
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</div>
                     <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 2 }}>
                       {m.year} · {pack ? pack.sessions.length + " sessions" : "session list pending"} · {m.mloCount} MLOs
-                      {m.real && <span className="pill cyan" style={{ marginLeft: 8 }}>Live</span>}
+                      
                     </div>
                   </div>
                   <Pill kind="muted">n={m.cohort}</Pill>
@@ -40043,6 +40279,36 @@ function VariantE() {
   const [filterDuration, setFilterDuration] = useStateE("All");
   const [sortBy, setSortBy] = useStateE("relevance");
   const [selected, setSelected] = useStateE(null);
+  // Ask-ASCEND (natural-language) state — scoped strictly to the elective catalog.
+  // When askResult is set, the rendered list shows the model's picks instead of
+  // the full faceted list.
+  const [askQuery, setAskQuery] = useStateE("");
+  const [askLoading, setAskLoading] = useStateE(false);
+  const [askResult, setAskResult] = useStateE(null);
+  const [askError, setAskError] = useStateE(null);
+  async function runAsk() {
+    const text = (q || "").trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askElectives) {
+      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
+      return;
+    }
+    setAskQuery(text);
+    setAskLoading(true);
+    setAskError(null);
+    setAskResult(null);
+    try {
+      const res = await window.AskAscend.askElectives(text);
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+  function clearAsk() {
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+  }
 
   // Facet values
   const facets = useMemoE(() => {
@@ -40078,15 +40344,11 @@ function VariantE() {
   }, [all]);
 
   const filtered = useMemoE(() => {
-    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
-    const matchToken = (e, t) => {
-      const hay = [
-        e.code, e.title, e.specialty, e.type, e.keywords,
-        e.residencyTracks, e.sites, e.clinicalSetting, e.intensity,
-        e.yearEligibility, e.erasCategory,
-      ].join(" ").toLowerCase();
-      return hay.includes(t);
-    };
+    // When an Ask-ASCEND search is active, the source list is the model's
+    // hydrated picks; otherwise it's the full catalog. Faceted filters then
+    // narrow that source. (Skipping the old `q` keyword filter — NL is the
+    // search mechanism now.)
+    const source = askResult && askResult.picks ? askResult.picks : all;
     const inMulti = (val, target, split) => {
       if (target === "All") return true;
       if (!val) return false;
@@ -40094,8 +40356,7 @@ function VariantE() {
       return val === target;
     };
 
-    let list = all.filter(e => {
-      if (tokens.length && !tokens.every(t => matchToken(e, t))) return false;
+    let list = source.filter(e => {
       if (!inMulti(e.specialty, filterSpecialty)) return false;
       if (!inMulti(e.type, filterType)) return false;
       if (!inMulti(e.yearEligibility, filterYear, ",")) return false;
@@ -40114,27 +40375,28 @@ function VariantE() {
     if (sortBy === "title") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     else if (sortBy === "code") list = [...list].sort((a, b) => a.code.localeCompare(b.code));
     else if (sortBy === "specialty") list = [...list].sort((a, b) => a.specialty.localeCompare(b.specialty) || a.title.localeCompare(b.title));
-    // "relevance" — sheet order
+    // "relevance" — sheet order (or Ask-ASCEND pick order when an NL search is active)
 
     return list;
-  }, [all, q, filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration, sortBy]);
+  }, [all, askResult, filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration, sortBy]);
 
-  const activeFilters = [filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration].filter(v => v !== "All").length + (q ? 1 : 0);
+  const activeFilters = [filterSpecialty, filterType, filterYear, filterSetting, filterIntensity, filterAudition, filterSite, filterDuration].filter(v => v !== "All").length + (askResult ? 1 : 0);
 
   function clearAll() {
-    setQ(""); setFilterSpecialty("All"); setFilterType("All"); setFilterYear("All");
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+    setFilterSpecialty("All"); setFilterType("All"); setFilterYear("All");
     setFilterSetting("All"); setFilterIntensity("All"); setFilterAudition("All"); setFilterSite("All");
     setFilterDuration("All");
   }
 
   const crumbs = [
-    selected ? { label: "Electives", onClick: () => setSelected(null) } : "Electives",
+    selected ? { label: "Electives Catalog", onClick: () => setSelected(null) } : "Electives Catalog",
     selected ? selected.code : null,
   ].filter(Boolean);
 
   return (
     <div className="dash" data-screen-label={`E · electives${selected ? " · " + selected.code : ""}`}>
-      <window.Topbar variantLabel="Electives" crumbs={crumbs} />
+      <window.Topbar variantLabel="Electives Catalog" crumbs={crumbs} />
       <div style={{ display: "flex", minHeight: 980 }}>
         {/* Sidebar filters */}
         <div className="sidenav" style={{ width: 240, flex: "0 0 240px" }}>
@@ -40186,29 +40448,55 @@ function VariantE() {
           </div>
 
           {/* Search bar */}
-          <div style={{ marginTop: 16, marginBottom: 16, display: "flex", gap: 10, alignItems: "center", background: "var(--paper)", padding: "10px 14px", border: "1px solid var(--grey-3)", borderRadius: 8 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--grey-11)" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+          <div style={{ marginTop: 16, marginBottom: 16, display: "flex", gap: 10, alignItems: "center", background: "var(--paper)", padding: "10px 14px", border: "1px solid " + (askResult || askLoading ? "var(--brand-cyan)" : "var(--grey-3)"), borderRadius: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--brand-cyan-deep)">
+              <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
             </svg>
             <input
               value={q}
               onChange={e => setQ(e.target.value)}
-              placeholder="Search electives — try “surgery”, “VA”, “anesthesia”, “OR”…"
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runAsk(); } }}
+              placeholder="Ask the catalog — try “something 2 weeks at the VA” or “oncology research electives”…"
               style={{ flex: 1, fontSize: 14, fontFamily: "var(--font-sans)", border: "none", outline: "none", background: "transparent" }}
             />
             {q && (
-              <button onClick={() => setQ("")} title="Clear" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--grey-11)", padding: 4, display: "flex" }}>
+              <button onClick={clearAsk} title="Clear" style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--grey-11)", padding: 4, display: "flex" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             )}
+            <button onClick={runAsk} disabled={!q.trim() || askLoading}
+              style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 5, border: "1px solid var(--brand-cyan)", background: q.trim() && !askLoading ? "var(--brand-cyan-deep)" : "var(--grey-2)", color: q.trim() && !askLoading ? "#fff" : "var(--grey-11)", cursor: q.trim() && !askLoading ? "pointer" : "default", fontFamily: "var(--font-sans)" }}>
+              {askLoading ? "…" : "Ask"}
+            </button>
           </div>
+
+          {/* Ask-ASCEND summary / loading / error banner */}
+          {(askLoading || askResult || askError) && (
+            <div style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 8, background: "var(--brand-cyan-tint)", border: "1px solid var(--brand-cyan)", display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--brand-cyan-deep)", fontWeight: 700 }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/></svg>
+                Ask the Electives Catalog
+              </div>
+              <div style={{ fontSize: 12.5, color: "var(--grey-11)", fontStyle: "italic" }}>“{askQuery || q}”</div>
+              {askLoading && <div style={{ fontSize: 13, color: "var(--ink-2)" }}>Searching the catalog…</div>}
+              {askError && <div style={{ fontSize: 13, color: "var(--bad)" }}>{askError}</div>}
+              {askResult && askResult.summary && (
+                <div style={{ fontSize: 14, color: "var(--ink-1)", lineHeight: 1.45 }}>{askResult.summary}</div>
+              )}
+              {askResult && (
+                <button onClick={clearAsk}
+                  style={{ alignSelf: "flex-start", marginTop: 2, fontSize: 11.5, fontWeight: 600, padding: "3px 9px", borderRadius: 4, border: "1px solid var(--brand-cyan-deep)", background: "transparent", color: "var(--brand-cyan-deep)", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                  Clear question — show full catalog
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Active chips */}
           {activeFilters > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-              {q && <Chip label={`"${q}"`} onRemove={() => setQ("")} />}
               {filterSpecialty !== "All" && <Chip label={filterSpecialty} onRemove={() => setFilterSpecialty("All")} />}
               {filterType !== "All" && <Chip label={filterType} onRemove={() => setFilterType("All")} />}
               {filterYear !== "All" && <Chip label={`Year ${filterYear}`} onRemove={() => setFilterYear("All")} />}
@@ -40223,13 +40511,15 @@ function VariantE() {
           {/* Results list */}
           {filtered.length === 0 ? (
             <div className="card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--grey-11)", fontSize: 13 }}>
-              No electives match your filters. Try removing some constraints, or
+              {askResult
+                ? "Ask ASCEND didn’t find a match. Try rephrasing, or "
+                : "No electives match your filters. Try removing some constraints, or "}
               <a href="#" onClick={(e) => { e.preventDefault(); clearAll(); }} style={{ color: "var(--brand-cyan-deep)", marginLeft: 4, fontWeight: 600 }}>clear all</a>.
             </div>
           ) : (
             <div className="col" style={{ gap: 10 }}>
               {filtered.map(e => (
-                <ElectiveCard key={e.code} e={e} active={selected?.code === e.code} onOpen={() => setSelected(e)} />
+                <ElectiveCard key={e.code} e={e} active={selected?.code === e.code} onOpen={() => setSelected(e)} reason={e.why} />
               ))}
             </div>
           )}
@@ -40292,7 +40582,7 @@ const TYPE_COLOR = {
   "Non-Clinical":          { bg: "rgba(216,11,140,0.10)", fg: "var(--brand-magenta)" },
 };
 
-function ElectiveCard({ e, active, onOpen }) {
+function ElectiveCard({ e, active, onOpen, reason }) {
   const c = TYPE_COLOR[e.type] || { bg: "var(--grey-2)", fg: "var(--ink-2)" };
   return (
     <button onClick={onOpen}
@@ -40607,7 +40897,7 @@ const LENSES = [
     color: "var(--brand-cyan)", deep: "var(--brand-cyan-deep)", tint: "var(--brand-cyan-tint)" },
   { id: "A", label: "Module Performance",   subtitle: "Exam analytics, item review, and blueprint coverage per module",
     color: "var(--brand-magenta)", deep: "var(--brand-magenta-deep)", tint: "#FBE5F0" },
-  { id: "E", label: "Electives",            subtitle: "Browse the ASCEND career-exploration elective catalog",
+  { id: "E", label: "Electives Catalog",    subtitle: "Browse the ASCEND career-exploration elective catalog",
     color: "var(--good)", deep: "#176D3B", tint: "var(--good-tint)" },
 ];
 
@@ -41262,6 +41552,31 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
     specialty: "All", type: "All", duration: "All", setting: "All",
     intensity: "All", audition: "All", site: "All",
   });
+  // Ask-ASCEND state, scoped strictly to electives.
+  const [askQuery, setAskQuery] = useStateMA("");
+  const [askLoading, setAskLoading] = useStateMA(false);
+  const [askResult, setAskResult] = useStateMA(null);
+  const [askError, setAskError] = useStateMA(null);
+  async function runAsk() {
+    const text = (q || "").trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askElectives) {
+      setAskError("Ask ASCEND not available.");
+      return;
+    }
+    setAskQuery(text); setAskLoading(true); setAskError(null); setAskResult(null);
+    try {
+      const res = await window.AskAscend.askElectives(text);
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+  function clearAsk() {
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+  }
 
   // Bridge for filter sheet → list state
   useEffectMA(() => { window.__mobileFilters = { filters, setFilters }; }, [filters]);
@@ -41269,19 +41584,16 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
   const activeFilterCount = Object.values(filters).filter((v) => v !== "All").length;
 
   const filtered = useMemoMA(() => {
-    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+    // Source list: Ask-ASCEND picks when an NL search is active, otherwise full catalog.
+    const source = askResult && askResult.picks ? askResult.picks : all;
     const inSplit = (val, target, split) => {
       if (target === "All") return true;
       if (!val) return false;
       if (split) return val.split(split).map((x) => x.trim()).includes(target);
       return val === target;
     };
-    let list = all.filter((e) => {
+    let list = source.filter((e) => {
       if (!eligibleForPhase(e.yearEligibility, phase)) return false;
-      if (tokens.length) {
-        const hay = [e.code, e.title, e.specialty, e.type, e.keywords, e.residencyTracks, e.sites, e.clinicalSetting, e.intensity].join(" ").toLowerCase();
-        if (!tokens.every((t) => hay.includes(t))) return false;
-      }
       if (!inSplit(e.specialty, filters.specialty)) return false;
       if (!inSplit(e.type, filters.type)) return false;
       if (!inSplit(e.clinicalSetting, filters.setting)) return false;
@@ -41299,10 +41611,11 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
     else if (sortBy === "code") list = [...list].sort((a, b) => a.code.localeCompare(b.code));
     else if (sortBy === "specialty") list = [...list].sort((a, b) => (a.specialty || "").localeCompare(b.specialty || "") || a.title.localeCompare(b.title));
     return list;
-  }, [all, q, phase, filters, sortBy]);
+  }, [all, askResult, phase, filters, sortBy]);
 
   function clearAll() {
-    setQ(""); setPhase("all");
+    setQ(""); setAskQuery(""); setAskResult(null); setAskError(null);
+    setPhase("all");
     setFilters({ specialty: "All", type: "All", duration: "All", setting: "All", intensity: "All", audition: "All", site: "All" });
   }
 
@@ -41315,7 +41628,7 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px 12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: "#fff" }}/>
-            <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Electives</div>
+            <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>Electives Catalog</div>
           </div>
           <button onClick={() => alert("Profile (stub)")} style={{ width: 36, height: 36, borderRadius: 999, background: "rgba(255,255,255,0.18)", border: "none", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
             <IconUser size={20} stroke="#fff" sw={2}/>
@@ -41324,14 +41637,21 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
         {/* Search */}
         <div style={{ padding: "0 14px" }}>
           <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
-            <IconSearch size={18} stroke={BRAND.grey11} sw={2}/>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search electives, code, track" autoCorrect="off" autoCapitalize="off"
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={BRAND.cyanDeep}>
+              <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+            </svg>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask the catalog — e.g. “oncology research”…" autoCorrect="off" autoCapitalize="off"
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runAsk(); } }}
               style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: sans, color: BRAND.ink, minWidth: 0 }}/>
             {q ? (
-              <button onClick={() => setQ("")} style={{ background: "transparent", border: "none", padding: 0, color: BRAND.grey11, cursor: "pointer", display: "grid", placeItems: "center" }}>
+              <button onClick={clearAsk} style={{ background: "transparent", border: "none", padding: 0, color: BRAND.grey11, cursor: "pointer", display: "grid", placeItems: "center" }}>
                 <IconClose size={16} stroke={BRAND.grey11} sw={2}/>
               </button>
             ) : null}
+            <button onClick={runAsk} disabled={!q.trim() || askLoading}
+              style={{ background: q.trim() && !askLoading ? BRAND.cyanDeep : BRAND.grey2, color: q.trim() && !askLoading ? "#fff" : BRAND.grey11, border: "none", padding: "6px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: q.trim() && !askLoading ? "pointer" : "default", letterSpacing: "0.04em", fontFamily: sans }}>
+              {askLoading ? "…" : "ASK"}
+            </button>
             <div style={{ width: 1, height: 18, background: BRAND.grey2 }}/>
             <button onClick={onOpenFilters} style={{ background: "transparent", border: "none", padding: 0, color: BRAND.cyan, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, position: "relative" }}>
               <IconFilter size={18} stroke={BRAND.cyan} sw={2.2}/>
@@ -41350,13 +41670,26 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
       <FilterChips filters={filters} setFilters={setFilters} onOpenFilters={onOpenFilters}/>
 
       {/* Active filter chips (removable) */}
-      {(activeFilterCount > 0 || q) && (
+      {(activeFilterCount > 0 || askResult) && (
         <div style={{ background: "#fff", borderBottom: "1px solid " + BRAND.grey2, padding: "6px 14px 10px", display: "flex", gap: 6, overflowX: "auto", flexWrap: "wrap" }}>
-          {q && <RemovableChip label={`"${q}"`} onRemove={() => setQ("")}/>}
+          {askResult && <RemovableChip label={`“${askQuery}”`} onRemove={clearAsk}/>}
           {Object.entries(filters).map(([k, v]) => v !== "All" && <RemovableChip key={k} label={v} onRemove={() => setFilters({ ...filters, [k]: "All" })}/>)}
-          {(activeFilterCount + (q ? 1 : 0)) > 1 && (
+          {(activeFilterCount + (askResult ? 1 : 0)) > 1 && (
             <button onClick={clearAll} style={{ marginLeft: "auto", background: "transparent", border: "none", color: BRAND.magenta, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "3px 6px" }}>Clear all</button>
           )}
+        </div>
+      )}
+
+      {/* Ask summary banner (mobile) */}
+      {(askLoading || askResult || askError) && (
+        <div style={{ padding: "10px 14px", background: "#E5F6FD", borderBottom: "1px solid " + BRAND.grey2 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: BRAND.cyanDeep, fontWeight: 700 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/></svg>
+            Ask the Catalog
+          </div>
+          {askLoading && <div style={{ fontSize: 12.5, color: BRAND.grey11, marginTop: 4 }}>Searching…</div>}
+          {askError && <div style={{ fontSize: 12.5, color: BRAND.bad, marginTop: 4 }}>{askError}</div>}
+          {askResult && askResult.summary && <div style={{ fontSize: 13.5, color: BRAND.ink, marginTop: 4, lineHeight: 1.45 }}>{askResult.summary}</div>}
         </div>
       )}
 
@@ -41386,7 +41719,7 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 16 }}>
             {filtered.map((e) => (
-              <ElectiveCard key={e.code} e={e} onOpen={() => onOpen(e.code)} saved={savedSet.has(e.code)} onToggleSave={() => onToggleSave(e.code)}/>
+              <ElectiveCard key={e.code} e={e} onOpen={() => onOpen(e.code)} saved={savedSet.has(e.code)} onToggleSave={() => onToggleSave(e.code)} reason={e.why}/>
             ))}
           </div>
         )}
@@ -41433,7 +41766,7 @@ function RemovableChip({ label, onRemove }) {
   );
 }
 
-function ElectiveCard({ e, onOpen, saved, onToggleSave }) {
+function ElectiveCard({ e, onOpen, saved, onToggleSave, reason }) {
   const c = specColor(e.specialty);
   return (
     <div onClick={onOpen}
@@ -41446,7 +41779,7 @@ function ElectiveCard({ e, onOpen, saved, onToggleSave }) {
             {saved ? <IconBookmarkF size={18}/> : <IconBookmark size={18} sw={2}/>}
           </button>
         </div>
-        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.25, marginBottom: 8, color: BRAND.ink }}>{e.title}</div>
+        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.25, marginBottom: 6, color: BRAND.ink }}>{e.title}</div>
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           <Tag color={c}>{e.specialty}</Tag>
           <Tag>{(e.durationOptions || "").replace(/\s/g, "")} wk</Tag>
@@ -41926,16 +42259,17 @@ const BROWSE_HUB = [
     ] },
 ];
 
-function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, setNavPath, filter, setFilter }) {
-  // q / navPath / filter are controlled by MobileApp so the user's browse
-  // position survives detail-open/close. Fall back to local state only if a
-  // caller doesn't pass them (defensive).
+function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, setNavPath, filter, setFilter, askMode, setAskMode, askLoading, askResult, askError, onAsk }) {
+  // q / navPath / filter / askMode controlled by MobileApp so the user's
+  // browse position + Ask-ASCEND answer survives detail-open/close.
   const [qLocal, setQLocal] = useStateMA("");
   const [filterLocal, setFilterLocal] = useStateMA("All");
   const [navPathLocal, setNavPathLocal] = useStateMA([]);
+  const [askModeLocal, setAskModeLocal] = useStateMA(false);
   if (q === undefined)        { q = qLocal;        setQ = setQLocal; }
   if (filter === undefined)   { filter = filterLocal;   setFilter = setFilterLocal; }
   if (navPath === undefined)  { navPath = navPathLocal; setNavPath = setNavPathLocal; }
+  if (askMode === undefined)  { askMode = askModeLocal; setAskMode = setAskModeLocal; }
   const index = useMemoMA(() => buildCurriculumIndex(), []);
 
   const C = window.CURRICULUM;
@@ -42063,14 +42397,40 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, s
         </div>
         <div style={{ padding: "0 14px" }}>
           <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
-            <IconSearch size={18} stroke={BRAND.grey11} sw={2}/>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search sessions, modules, MEPOs, MLOs…" autoCorrect="off" autoCapitalize="off"
+            {askMode ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={BRAND.cyanDeep}>
+                <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+                <path d="M19.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>
+              </svg>
+            ) : (
+              <IconSearch size={18} stroke={BRAND.grey11} sw={2}/>
+            )}
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={askMode ? "Ask anything about the ASCEND curriculum…" : "Search sessions, modules, MEPOs, MLOs…"} autoCorrect="off" autoCapitalize="off"
+              onKeyDown={(e) => { if (askMode && e.key === "Enter" && onAsk) { e.preventDefault(); onAsk(q); } }}
               style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: sans, color: BRAND.ink, minWidth: 0 }}/>
             {q ? (
               <button onClick={() => setQ("")} style={{ background: "transparent", border: "none", padding: 0, color: BRAND.grey11, cursor: "pointer", display: "grid", placeItems: "center" }}>
                 <IconClose size={16} stroke={BRAND.grey11} sw={2}/>
               </button>
             ) : null}
+          </div>
+          {/* Ask-ASCEND toggle row */}
+          <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
+            <button onClick={() => { setAskMode(!askMode); }}
+              style={{
+                fontSize: 11.5, fontWeight: 600, padding: "5px 11px",
+                borderRadius: 999,
+                border: "1px solid " + (askMode ? "#fff" : "rgba(255,255,255,0.5)"),
+                background: askMode ? "#fff" : "rgba(255,255,255,0.16)",
+                color: askMode ? BRAND.cyanDeep : "#fff",
+                cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+                letterSpacing: "0.04em", fontFamily: sans,
+              }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+              </svg>
+              {askMode ? "Keyword search" : "Ask ASCEND"}
+            </button>
           </div>
         </div>
       </div>
@@ -42084,12 +42444,118 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, s
             <div style={{ fontSize: 13 }}>The session map data isn't available in this build.</div>
           </div>
         </div>
+      ) : askMode ? (
+        <AskAscendMobileView q={q} loading={askLoading} error={askError} result={askResult} onAsk={onAsk} onOpenSession={(item) => onOpenResult(item)}/>
       ) : inSearch ? (
         <SearchResultsView results={results} filter={filter} setFilter={setFilter} counts={counts} groups={groups} filtered={filtered} onOpen={onOpenResult}/>
       ) : navPath.length === 0 ? (
         <BrowseHub onOpenTile={openHubTile}/>
       ) : (
         <BrowseLevel node={currentNode} navPath={navPath} onTap={tapNode} onBack={popNode} onHome={resetNav} onJumpTo={(i) => setNavPath((p) => p.slice(0, i + 1))} nodeChildren={nodeChildren}/>
+      )}
+    </div>
+  );
+}
+
+// ─── Ask-ASCEND mobile body ───────────────────────────────────────
+// Mirrors the desktop AskAscendView but in the mobile visual idiom: white
+// cards on the grey app background, picks render as tap-rows that open the
+// shared SearchResultDetail via onOpenSession (the parent maps to onOpenResult).
+function AskAscendMobileView({ q, loading, error, result, onAsk, onOpenSession }) {
+  const sans = "'Inter Tight', system-ui, sans-serif";
+  // Resolve a pick → existing search-index entry so onOpenSession gets the
+  // exact shape SearchResultDetail expects.
+  function openPick(p) {
+    if (!onOpenSession) return;
+    const idx = buildCurriculumIndex();
+    const match = idx.find((it) => it.kind === p.kind && it.id === p.id);
+    if (match) onOpenSession(match);
+  }
+  if (loading) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", padding: "30px 16px", textAlign: "center", color: BRAND.grey11, fontFamily: sans }}>
+        <div style={{ display: "inline-block", width: 28, height: 28, border: "3px solid " + BRAND.grey2, borderTopColor: BRAND.cyanDeep, borderRadius: "50%", animation: "ask-spin 800ms linear infinite" }}></div>
+        <style>{`@keyframes ask-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <div style={{ marginTop: 14, fontSize: 13.5 }}>Asking ASCEND…</div>
+        <div style={{ marginTop: 4, fontSize: 11.5, color: BRAND.grey8, fontStyle: "italic" }}>“{q}”</div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", fontFamily: sans }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: "18px 16px", color: BRAND.bad, fontWeight: 600 }}>Couldn’t answer that.</div>
+        <div style={{ fontSize: 13, color: BRAND.grey11, marginTop: 8, padding: "0 4px" }}>{error}</div>
+      </div>
+    );
+  }
+  if (!result) {
+    return (
+      <div style={{ flex: 1, overflowY: "auto", padding: "30px 16px", fontFamily: sans, textAlign: "center" }}>
+        <div style={{ color: BRAND.cyanDeep, fontSize: 28, marginBottom: 12 }}>
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor" style={{ display: "inline-block" }}>
+            <path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/>
+            <path d="M19.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>
+          </svg>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: BRAND.ink, marginBottom: 8 }}>Ask ASCEND</div>
+        <div style={{ fontSize: 13, color: BRAND.grey11, lineHeight: 1.55, maxWidth: 320, margin: "0 auto" }}>
+          Type a question and tap Enter / Send. Examples:
+        </div>
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6, maxWidth: 320, margin: "14px auto 0", textAlign: "left" }}>
+          {[
+            "Where do students learn about nutrition counseling?",
+            "Which sessions teach disease prevention strategies?",
+            "Where is health maintenance covered in Phase 1?",
+          ].map((ex) => (
+            <button key={ex} onClick={() => onAsk && onAsk(ex)}
+              style={{ background: "#fff", border: "1px solid " + BRAND.grey2, borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: BRAND.ink2, fontStyle: "italic", textAlign: "left", cursor: "pointer", fontFamily: sans }}>
+              {ex}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px 18px", fontFamily: sans }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: BRAND.cyanDeep, fontWeight: 700, marginBottom: 6, padding: "0 4px" }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.3L19 9.7l-5.1 1.9L12 17l-1.9-5.4L5 9.7l5.1-1.9L12 2.5z"/></svg>
+        Ask ASCEND
+      </div>
+      <div style={{ fontSize: 12.5, color: BRAND.grey11, marginBottom: 4, padding: "0 4px" }}>“{q}”</div>
+      {result.summary && (
+        <div style={{ background: "#fff", borderRadius: 12, padding: "14px 14px", fontSize: 14, color: BRAND.ink, lineHeight: 1.5, marginBottom: 12 }}>
+          {result.summary}
+        </div>
+      )}
+      {result.picks && result.picks.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {result.picks.map((p, i) => (
+            <button key={p.kind + ":" + p.id + ":" + i} onClick={() => openPick(p)}
+              style={{ background: "#fff", border: "1px solid " + BRAND.grey2, borderRadius: 12, padding: "12px 14px", textAlign: "left", cursor: "pointer", fontFamily: sans, display: "flex", flexDirection: "column", gap: 4, WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: BRAND.grey11, fontWeight: 700 }}>{p.kind}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: p.kind === "Session" ? (BRAND.sessionTitle || "#0B3B7A") : BRAND.ink, lineHeight: 1.3 }}>{p.label}</span>
+              </div>
+              {p.sub && <div style={{ fontSize: 11.5, color: BRAND.grey11 }}>{p.sub}</div>}
+              {p.jamas && p.jamas.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                  {p.jamas.map((c) => (
+                    <span key={c.n} title={c.text}
+                      style={{ fontSize: 9.5, padding: "1px 6px", borderRadius: 3,
+                        background: BRAND.cyanTint, border: "1px solid " + BRAND.cyan,
+                        color: BRAND.cyanDeep, fontWeight: 600, whiteSpace: "nowrap" }}>
+                      JAMA #{c.n}{c.priority ? " ★" : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: BRAND.grey11, fontStyle: "italic", padding: "0 4px" }}>No matches in the curriculum index.</div>
       )}
     </div>
   );
@@ -42879,6 +43345,32 @@ function MobileApp() {
   const [searchNavPath, setSearchNavPath] = useStateMA([]);
   const [searchFilter, setSearchFilter] = useStateMA("All");
 
+  // Ask-ASCEND state — lifted for the same reason: a user can open a session
+  // from a natural-language pick, then hit back, and expect to see the same
+  // answer list rather than landing on the search hub.
+  const [askMode, setAskMode] = useStateMA(false);
+  const [askLoading, setAskLoading] = useStateMA(false);
+  const [askResult, setAskResult] = useStateMA(null);
+  const [askError, setAskError] = useStateMA(null);
+  async function runAsk(query) {
+    const text = (query || "").trim();
+    if (!text) return;
+    if (!window.AskAscend || !window.AskAscend.askAscend) {
+      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
+      return;
+    }
+    setAskLoading(true); setAskError(null); setAskResult(null);
+    try {
+      const audience = window.STUDENT_VIEW ? "student" : "both";
+      const res = await window.AskAscend.askAscend(text, { audience });
+      setAskResult(res);
+    } catch (e) {
+      setAskError(String(e && e.message ? e.message : e));
+    } finally {
+      setAskLoading(false);
+    }
+  }
+
   function toggleSave(code) {
     setSavedSet((prev) => {
       const next = new Set(prev);
@@ -42908,6 +43400,9 @@ function MobileApp() {
     if (next !== "search") {
       setSearchQ("");
       setSearchNavPath([]);
+      setAskMode(false);
+      setAskResult(null);
+      setAskError(null);
     }
   }
 
@@ -42939,6 +43434,9 @@ function MobileApp() {
       q={searchQ} setQ={setSearchQ}
       navPath={searchNavPath} setNavPath={setSearchNavPath}
       filter={searchFilter} setFilter={setSearchFilter}
+      askMode={askMode} setAskMode={setAskMode}
+      askLoading={askLoading} askResult={askResult} askError={askError}
+      onAsk={runAsk}
       onOpenResult={pushResult} onOpenPlaceholder={(p) => setPlaceholder(p)}/>;
   } else if (tab === "saved") {
     body = <SavedList savedSet={savedSet} onOpen={(code) => setDetailCode(code)} onToggleSave={toggleSave} onGoBrowse={() => switchTab("electives")}/>;
