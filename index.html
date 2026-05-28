@@ -39881,23 +39881,33 @@ function SessionList({ pack, mod, openSession, setOpenSession, setHoveredObjIdx,
     );
   }
 
-  // Group by session type (alpha), then by title within each group.
-  // The #N column is intentionally not shown — numbering implies a sequence
-  // and source numbering doesn't reflect the live schedule.
+  // Group by pill code (LEC / LAB / CCSG / PTP / etc.) — the same short
+  // label shown on each row's type pill. This ensures rows whose pill
+  // reads "CCSG" cluster together even if their underlying s.type differs
+  // by module context (e.g. Small Group in MCG → CCSG; Small Group in
+  // anatomy → ACS). Groups sort alphabetically by pill code; sessions
+  // within each group sort alphabetically by title.
+  const codeFor = (s) => (window.shortTypeCode
+    ? window.shortTypeCode(s.type, mod.id, mod.phase)
+    : (s.type || "")) || "Other";
   const byType = {};
   for (const s of visibleSessions) {
-    const t = s.type || "Other";
+    const t = codeFor(s);
     (byType[t] = byType[t] || []).push(s);
   }
-  const typeNames = Object.keys(byType).sort((a, b) => a.localeCompare(b));
-  for (const t of typeNames) {
+  const typeCodes = Object.keys(byType).sort((a, b) => a.localeCompare(b));
+  for (const t of typeCodes) {
     byType[t].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
   }
 
   return (
     <div style={{ borderTop: "1px solid var(--grey-2)", background: "var(--paper)" }}>
-      {typeNames.map(t => (
+      {typeCodes.map(t => (
         <div key={t}>
+          <div style={{ padding: "8px 16px 6px 36px", fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--grey-7)", fontWeight: 600, background: "var(--grey-1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>{t}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--grey-11)" }}>{byType[t].length}</span>
+          </div>
           {byType[t].map(s => {
             const isOpen = openSession === s.id;
             return (
@@ -42873,20 +42883,30 @@ function ModuleDetailBody({ item, onOpenItem }) {
       {sessions.length > 0 ? (
         <InfoBlock label={"Sessions · " + sessions.length}>
           {(() => {
-            // Group by session type (alpha), then by title within each group.
+            // Group by pill code (LEC / LAB / CCSG / PTP / etc.) — same as
+            // the short label on each row's type pill. Ensures rows that
+            // share a pill cluster together. Groups sort alphabetically by
+            // pill code; sessions within each group sort alphabetically.
+            // moduleTypeCode() is the local function used by the row pill,
+            // so the group header and the pill always agree.
+            const codeFor = (s) => moduleTypeCode(s) || "Other";
             const byType = {};
             for (const s of sessions) {
-              const t = s.type || "Other";
+              const t = codeFor(s);
               (byType[t] = byType[t] || []).push(s);
             }
-            const typeNames = Object.keys(byType).sort((a, b) => a.localeCompare(b));
-            for (const t of typeNames) {
+            const typeCodes = Object.keys(byType).sort((a, b) => a.localeCompare(b));
+            for (const t of typeCodes) {
               byType[t].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
             }
             return (
               <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
-                {typeNames.map((t) => (
+                {typeCodes.map((t) => (
                   <div key={t}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0 6px", fontSize: 10.5, color: BRAND.grey11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", borderTop: "1px solid " + BRAND.grey2, marginTop: 6 }}>
+                      <span>{t}</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{byType[t].length}</span>
+                    </div>
                     {byType[t].map((s, i) => (
                       <button key={s.id || i} onClick={() => openSession(s)}
                         style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "11px 0", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
