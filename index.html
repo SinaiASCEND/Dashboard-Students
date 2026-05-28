@@ -35721,8 +35721,8 @@ function buildSearchIndex() {
       idx.push({
         kind: "Session", id: s.id,
         title: s.title,
-        sub: `${modShort}${s.week ? " · Week " + s.week : ""}${s.type ? " · " + s.type : ""}`,
-        meta: `${s.duration ? s.duration + " min" : ""}${s.faculty ? " · " + s.faculty : ""}`,
+        sub: `${modShort}${s.type ? " · " + s.type : ""}`,
+        meta: `${s.faculty || ""}`,
         haystack: [
           s.title, modShort, modName, modId, s.type, s.faculty || "",
           s.methods || "",
@@ -36558,11 +36558,8 @@ function SessionResultCard({ item, rank, onOpen }) {
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
           <span className={`pill ${pill.kind}`} style={{ flex: "0 0 auto" }}>{pill.label}</span>
           <span style={{ fontSize: 11, color: "var(--grey-11)" }}>
-            {item.moduleShort}{s.week ? " · Week " + s.week : ""}
+            {item.moduleShort}
           </span>
-          {s.duration ? (
-            <span style={{ fontSize: 11, color: "var(--grey-11)" }}>· {s.duration} min</span>
-          ) : null}
           {item.slos?.length ? (
             <span style={{ fontSize: 11, color: "var(--grey-11)" }}>· {item.slos.length} SLO{item.slos.length === 1 ? "" : "s"}</span>
           ) : null}
@@ -36645,7 +36642,7 @@ function SessionDetailOverlay({ item, onClose, onOpenInTrace }) {
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 11, color: "var(--grey-11)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
-            {item.moduleShort} — {item.moduleName}{s.week ? " · Week " + s.week : ""}
+            {item.moduleShort} — {item.moduleName}
           </div>
           <div style={{ fontSize: 20, fontWeight: 700, color: "var(--session-title-deep)", marginTop: 4, lineHeight: 1.25, fontFamily: "var(--font-serif, var(--font-sans))" }}>
             {s.title}
@@ -36671,7 +36668,6 @@ function SessionDetailOverlay({ item, onClose, onOpenInTrace }) {
           </div>
           <DetailRow label="Title" value={s.title} />
           <DetailRow label="Type" value={<span className={`pill ${pill.kind}`}>{pill.label}</span>} />
-          <DetailRow label="Duration" value={s.duration ? `${s.duration} minutes` : "—"} />
           <DetailRow label="Method" value={s.methods || <span style={{ color: "var(--grey-11)", fontStyle: "italic" }}>Not specified</span>} multiline />
           {s.faculty && <DetailRow label="Faculty" value={s.faculty} />}
           {s.week && <DetailRow label="Week" value={`Week ${s.week}`} />}
@@ -38131,7 +38127,6 @@ function OutcomeModuleViewB({ mepo, mod }) {
                 "Session title": s.title,
                 "Type": s.type,
                 "Week": s.week || "",
-                "Duration (min)": s.duration || "",
                 "SLOs": (s.objectives || []).length,
                 "SLO list": (s.objectives || []).map(o => o.text).join(" | "),
                 "MEPOs aligned": (lookup.mepos || []).map(n => `MEPO ${n}`).join("; "),
@@ -38169,14 +38164,12 @@ function OutcomeModuleViewB({ mepo, mod }) {
             {taughtIn.map(({ s, matchingObjs }, i) => (
               <div key={s.id} style={{ padding: "12px 0", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
                 <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ width: 38, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em" }}>WK {s.week}</span>
                   <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
                   <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</span>
                   <button onClick={() => window.APP_NAV?.openTrace({ moduleId: mod.id, sessionId: s.id })}
                     style={{ background: "none", border: "1px solid var(--grey-3)", borderRadius: 4, padding: "2px 8px", fontSize: 10.5, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600 }}>
                     Trace ↗
                   </button>
-                  <span style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration}min</span>
                 </div>
                 {matchingObjs && matchingObjs.length > 0 && (
                   <ul style={{ margin: "6px 0 0 0", paddingLeft: 56, fontSize: 11.5, color: "var(--ink-2)", lineHeight: 1.4 }}>
@@ -38240,14 +38233,12 @@ function OutcomeModuleViewB({ mepo, mod }) {
                 {taughtIn.map(({ s, matchingObjs }, i) => (
                   <div key={s.id} style={{ padding: "12px 0", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)" }}>
                     <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 4 }}>
-                      <span style={{ width: 38, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em" }}>WK {s.week}</span>
-                      <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
+                          <span className="pill cyan" style={{ width: 78, justifyContent: "center" }}>{window.shortTypeCode(s.type, mod.id, mod.phase)}</span>
                       <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</span>
                       <button onClick={() => window.APP_NAV?.openTrace({ moduleId: mod.id, sessionId: s.id })}
                         style={{ background: "none", border: "1px solid var(--grey-3)", borderRadius: 4, padding: "2px 8px", fontSize: 10.5, color: "var(--brand-cyan-deep)", cursor: "pointer", fontWeight: 600 }}>
                         Trace ↗
                       </button>
-                      <span style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration}min</span>
                     </div>
                     <ul style={{ margin: "6px 0 0 0", paddingLeft: 56, fontSize: 11.5, color: "var(--ink-2)", lineHeight: 1.4 }}>
                       {matchingObjs.map((o, j) => (
@@ -38985,7 +38976,6 @@ function VariantD() {
                     "Session title": s.title,
                     "Type": window.shortTypeCode ? window.shortTypeCode(s.type, mod.id, mod.phase) : s.type,
                     "Week": s.week || "",
-                    "Duration (min)": s.duration || "",
                     "Methods": s.methods || "",
                     "SLOs": sloCount,
                     "MLOs targeted": [...mloNums].sort((a,b)=>a-b).map(n => "MLO " + n).join("; "),
@@ -39243,8 +39233,8 @@ function SessionSidePanel({ session, mod, onClose }) {
       </div>
       <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.35, marginBottom: 4, color: "var(--session-title)" }}>{session.title}</div>
       <div style={{ fontSize: 11, color: "var(--grey-11)", marginBottom: 12 }}>
-        {mod?.name}{session.week ? " · Week " + session.week : ""} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
-        {session.duration ? " · " + session.duration + " min" : ""}
+        {mod?.name} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
+        
       </div>
       {/* SLOs */}
       {session.objectives && session.objectives.length > 0 && (
@@ -39416,7 +39406,6 @@ function AocsInline({ navigateToSession }) {
                 {sessions.map((s, i) => (
                   <button key={s.id} onClick={() => setPickedSession({ session: s, mod })}
                           style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)", background: "transparent", border: "none", textAlign: "left", width: "100%", cursor: "pointer", fontFamily: "inherit" }}>
-                    <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: "var(--session-title)" }}>{s.title}</div>
@@ -39426,7 +39415,6 @@ function AocsInline({ navigateToSession }) {
                         </div>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
                   </button>
                 ))}
               </div>
@@ -39584,7 +39572,6 @@ function ThreadsInline({ navigateToSession }) {
                   return (
                   <button key={s.id} onClick={() => setPickedSession({ session: s, mod })}
                           style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid var(--grey-2)", background: "transparent", border: "none", textAlign: "left", width: "100%", cursor: "pointer", fontFamily: "inherit" }}>
-                    <span style={{ width: 60, fontSize: 11, color: "var(--grey-11)", fontWeight: 600, letterSpacing: "0.04em", paddingTop: 2 }}>WK {s.week ?? "—"}</span>
                     <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase}/>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, color: "var(--session-title)" }}>{s.title}</div>
@@ -39612,7 +39599,6 @@ function ThreadsInline({ navigateToSession }) {
                         <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 4, fontStyle: "italic" }}>{sub}</div>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration ? s.duration + " min" : ""}</div>
                   </button>
                   );
                 })}
@@ -39833,15 +39819,11 @@ function ModuleSummaryCardD({ m, pack }) {
   const mloCount = (pack.mlos || []).length;
   const typeOrder = ["LEC", "CCSG", "LAB", "SGD", "PTP", "ACS", "Other"];
   const typeCounts = Object.fromEntries(typeOrder.map(k => [k, 0]));
-  let totalMinutes = 0;
   for (const s of sessions) {
     const code = moduleTypeCode(s);
     if (typeCounts[code] == null) typeCounts[code] = 0;
     typeCounts[code]++;
-    totalMinutes += typeof s.duration === "number" ? s.duration : 0;
   }
-  const totalHours = totalMinutes / 60;
-  const hoursDisplay = totalMinutes ? (Math.round(totalHours * 2) / 2) + " h" : "—";
   const directors = (window.MODULE_DIRECTORS && window.MODULE_DIRECTORS[m.id]) || "—";
   const phaseDisplay = m.phase === "Systems" ? "Organ Systems" : (m.phase || "—");
   const typeRows = typeOrder.filter(k => typeCounts[k] > 0);
@@ -39851,7 +39833,6 @@ function ModuleSummaryCardD({ m, pack }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 8 }}>
         <DesktopStatTile label="Phase"            value={phaseDisplay}/>
         <DesktopStatTile label="Year"             value={m.year || "—"}/>
-        <DesktopStatTile label="Curricular Hours" value={hoursDisplay}/>
       </div>
       <button onClick={() => setOpen(v => !v)}
               style={{ background: "transparent", border: "none", padding: "6px 0", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit", color: "var(--brand-cyan-deep)", fontSize: 12, fontWeight: 600 }}>
@@ -39883,7 +39864,10 @@ function Caret({ open }) {
 }
 
 function SessionList({ pack, mod, openSession, setOpenSession, setHoveredObjIdx, typeFilter }) {
-  // Group sessions by week, applying the optional type filter
+  // Sessions are sorted alphabetically by title. Week designation is
+  // intentionally not used here — week numbers in source data don't reflect
+  // the live academic calendar, so grouping by week produced misleading
+  // "schedules". Alphabetical listing is calendar-agnostic.
   const filterActive = typeFilter && typeFilter.size > 0;
   const visibleSessions = filterActive
     ? pack.sessions.filter(s => typeFilter.has(s.type))
@@ -39897,45 +39881,43 @@ function SessionList({ pack, mod, openSession, setOpenSession, setHoveredObjIdx,
     );
   }
 
-  const byWeek = {};
-  visibleSessions.forEach(s => { (byWeek[s.week] = byWeek[s.week] || []).push(s); });
-  const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
+  // Group by session type (alpha), then by title within each group.
+  // The #N column is intentionally not shown — numbering implies a sequence
+  // and source numbering doesn't reflect the live schedule.
+  const byType = {};
+  for (const s of visibleSessions) {
+    const t = s.type || "Other";
+    (byType[t] = byType[t] || []).push(s);
+  }
+  const typeNames = Object.keys(byType).sort((a, b) => a.localeCompare(b));
+  for (const t of typeNames) {
+    byType[t].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  }
 
   return (
     <div style={{ borderTop: "1px solid var(--grey-2)", background: "var(--paper)" }}>
-      {weeks.map(w => {
-        const wkSessions = byWeek[w];
-        return (
-          <div key={w}>
-            <div style={{ padding: "8px 16px 6px 36px", fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--grey-7)", fontWeight: 600, background: "var(--grey-1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>Week {w}</span>
-            </div>
-            {wkSessions.map((s, idx) => {
-              const isOpen = openSession === s.id;
-              const sessNum = s.n || idx + 1;
-              return (
-                <div key={s.id} style={{ borderBottom: "1px solid var(--grey-2)" }}>
-                  <div
-                    style={{ padding: "10px 16px 10px 36px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", background: isOpen ? "var(--brand-cyan-tint)" : "transparent" }}
-                    onClick={(e) => { e.stopPropagation(); setOpenSession(isOpen ? null : s.id); setHoveredObjIdx(null); }}>
-                    <Caret open={isOpen} />
-                    <div style={{ width: 36, fontSize: 11, color: "var(--grey-11)", flex: "0 0 36px", fontVariantNumeric: "tabular-nums" }}>
-                      #{sessNum}
-                    </div>
-                    <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase} />
-                    <div style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</div>
-                    <div style={{ fontSize: 11, color: "var(--grey-11)" }}>{s.duration}min</div>
-                    <div style={{ fontSize: 11, color: "var(--grey-11)", marginLeft: 8 }}>
-                      <span className="t-num">{s.objectives.length}</span> obj · <span className="t-num">{new Set(s.objectives.flatMap(o => o.mlos)).size}</span> MLOs
-                    </div>
+      {typeNames.map(t => (
+        <div key={t}>
+          {byType[t].map(s => {
+            const isOpen = openSession === s.id;
+            return (
+              <div key={s.id} style={{ borderBottom: "1px solid var(--grey-2)" }}>
+                <div
+                  style={{ padding: "10px 16px 10px 36px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", background: isOpen ? "var(--brand-cyan-tint)" : "transparent" }}
+                  onClick={(e) => { e.stopPropagation(); setOpenSession(isOpen ? null : s.id); setHoveredObjIdx(null); }}>
+                  <Caret open={isOpen} />
+                  <SessionTypePill type={s.type} modId={mod.id} modPhase={mod.phase} />
+                  <div style={{ flex: 1, fontWeight: 600, fontSize: 13, color: "var(--session-title)" }}>{s.title}</div>
+                  <div style={{ fontSize: 11, color: "var(--grey-11)", marginLeft: 8 }}>
+                    <span className="t-num">{s.objectives.length}</span> obj · <span className="t-num">{new Set(s.objectives.flatMap(o => o.mlos)).size}</span> MLOs
                   </div>
-                  {isOpen && <SessionObjectives session={s} pack={pack} mod={mod} setHoveredObjIdx={setHoveredObjIdx} />}
                 </div>
-              );
-            })}
-          </div>
-        );
-      })}
+                {isOpen && <SessionObjectives session={s} pack={pack} mod={mod} setHoveredObjIdx={setHoveredObjIdx} />}
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -39987,7 +39969,6 @@ function SessionObjectives({ session, pack, mod, setHoveredObjIdx }) {
     <div style={{ padding: "12px 16px 16px 56px", background: "var(--grey-1)", borderTop: "1px solid var(--grey-2)" }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 18, fontSize: 11, color: "var(--grey-11)", marginBottom: 12 }}>
         <span><span className="t-eyebrow">Type</span> &nbsp;{window.shortTypeCode(session.type, mod?.id, mod?.phase)}</span>
-        <span><span className="t-eyebrow">Duration</span> &nbsp;{session.duration} min</span>
         {session.methods ? (
           <span style={{ flex: "1 1 100%", fontStyle: "italic" }}>
             <span className="t-eyebrow">Methods</span> &nbsp;{session.methods}
@@ -42029,8 +42010,8 @@ function buildCurriculumIndex() {
         : (s.slos || []).filter(Boolean);
       idx.push({
         kind: "Session", id: s.id,
-        title: s.title, sub: modShort + (s.week ? " · Week " + s.week : "") + (s.type ? " · " + s.type : ""),
-        meta: [s.duration ? s.duration + " min" : null, s.faculty].filter(Boolean).join(" · "),
+        title: s.title, sub: modShort + (s.type ? " · " + s.type : ""),
+        meta: [s.faculty].filter(Boolean).join(" · "),
         haystack: [s.title, modShort, modId, s.type, s.faculty, s.methods, ...slos, s.keywords, s.clinical, s.societal].filter(Boolean).join(" ").toLowerCase(),
         payload: { session: s, moduleId: modId, moduleShort: modShort, slos },
       });
@@ -42234,8 +42215,8 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, s
             out.push({
               id: "sess:" + s.id,
               label: s.title,
-              sub: (m.short || m.id) + (s.week ? " · Week " + s.week : "") + (s.type ? " · " + s.type : ""),
-              meta: [s.duration ? s.duration + " min" : null, s.aoc && filter.aoc ? "AOC: " + s.aoc + (s.aocSubdomain ? " · " + s.aocSubdomain : "") : null].filter(Boolean).join(" · "),
+              sub: (m.short || m.id) + (s.type ? " · " + s.type : ""),
+              meta: [s.aoc && filter.aoc ? "AOC: " + s.aoc + (s.aocSubdomain ? " · " + s.aocSubdomain : "") : null].filter(Boolean).join(" · "),
               sessionPayload: { session: s, module: m },
             });
           }
@@ -42269,8 +42250,8 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, s
       onOpenResult({
         kind: "Session", id: sp.session.id,
         title: sp.session.title,
-        sub: moduleShort + (sp.session.week ? " · Week " + sp.session.week : "") + (sp.session.type ? " · " + sp.session.type : ""),
-        meta: [sp.session.duration ? sp.session.duration + " min" : null, sp.session.faculty].filter(Boolean).join(" · "),
+        sub: moduleShort + (sp.session.type ? " · " + sp.session.type : ""),
+        meta: [sp.session.faculty].filter(Boolean).join(" · "),
         payload: { session: sp.session, moduleId: sp.module.id, moduleShort, slos },
       });
       return;
@@ -42658,8 +42639,8 @@ function SessionDetailBody({ item, onOpenItem }) {
     onOpenItem({
       kind: "Session", id: rs.id,
       title: rs.title,
-      sub: (rmod.short || rmod.id) + (rs.week ? " · Week " + rs.week : "") + (rs.type ? " · " + rs.type : ""),
-      meta: [rs.duration ? rs.duration + " min" : null, rs.faculty].filter(Boolean).join(" · "),
+      sub: (rmod.short || rmod.id) + (rs.type ? " · " + rs.type : ""),
+      meta: [rs.faculty].filter(Boolean).join(" · "),
       payload: { session: rs, moduleId: rmod.id, moduleShort: rmod.short || rmod.id, slos: rSlos },
     });
   }
@@ -42696,7 +42677,6 @@ function SessionDetailBody({ item, onOpenItem }) {
     <>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
         <StatTile label="Type"     value={s.type || "—"}/>
-        <StatTile label="Duration" value={s.duration ? s.duration + " min" : "—"}/>
         <StatTile label="Week"     value={s.week != null ? "W" + s.week : "—"}/>
       </div>
       <InfoBlock label="Module">
@@ -42841,16 +42821,12 @@ function ModuleDetailBody({ item, onOpenItem }) {
   }
   const typeOrder = ["LEC", "CCSG", "LAB", "SGD", "PTP", "ACS", "Other"];
   const typeCounts = Object.fromEntries(typeOrder.map((k) => [k, 0]));
-  let totalMinutes = 0;
   for (const s of sessions) {
     const code = moduleTypeCode(s);
     if (typeCounts[code] == null) typeCounts[code] = 0;
     typeCounts[code]++;
-    totalMinutes += typeof s.duration === "number" ? s.duration : 0;
   }
   // Render hours as e.g. "96 h" or "94.5 h" when there's a half-hour remainder.
-  const totalHours = totalMinutes / 60;
-  const hoursDisplay = totalMinutes ? (Math.round(totalHours * 2) / 2) + " h" : "—";
 
   // Per-module director(s) lookup. We'll fill this in once user provides
   // names; until then, falls back to "—".
@@ -42864,8 +42840,8 @@ function ModuleDetailBody({ item, onOpenItem }) {
     onOpenItem({
       kind: "Session", id: s.id,
       title: s.title,
-      sub: moduleShort + (s.week ? " · Week " + s.week : "") + (s.type ? " · " + s.type : ""),
-      meta: [s.duration ? s.duration + " min" : null, s.faculty].filter(Boolean).join(" · "),
+      sub: moduleShort + (s.type ? " · " + s.type : ""),
+      meta: [s.faculty].filter(Boolean).join(" · "),
       payload: { session: s, moduleId: m.id, moduleShort, slos },
     });
   }
@@ -42875,7 +42851,6 @@ function ModuleDetailBody({ item, onOpenItem }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
         <StatTile label="Phase"            value={phaseDisplay}/>
         <StatTile label="Year"             value={m.year  || "—"}/>
-        <StatTile label="Curricular Hours" value={hoursDisplay}/>
       </div>
       <button onClick={() => setSummaryOpen((v) => !v)}
               style={{ background: "transparent", border: "none", padding: "8px 4px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit", color: BRAND.cyanDeep, fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
@@ -42897,23 +42872,35 @@ function ModuleDetailBody({ item, onOpenItem }) {
       )}
       {sessions.length > 0 ? (
         <InfoBlock label={"Sessions · " + sessions.length}>
-          <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
-            {sessions.map((s, i) => (
-              <button key={s.id || i} onClick={() => openSession(s)}
-                style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "11px 0", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
-                <div style={{ flex: "0 0 52px", paddingTop: 2 }}>
-                  <div style={{ fontSize: 10, color: BRAND.grey11, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700 }}>{s.week != null ? "Week " + s.week : "—"}</div>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: BRAND.sessionTitle || "#0B3B7A", lineHeight: 1.35 }}>{s.title}</div>
-                  <div style={{ fontSize: 11.5, color: BRAND.grey11, marginTop: 3, fontWeight: 500 }}>
-                    {[moduleTypeCode(s), s.duration ? s.duration + " min" : null].filter((x) => x && x !== "Other").join(" · ") || "—"}
+          {(() => {
+            // Group by session type (alpha), then by title within each group.
+            const byType = {};
+            for (const s of sessions) {
+              const t = s.type || "Other";
+              (byType[t] = byType[t] || []).push(s);
+            }
+            const typeNames = Object.keys(byType).sort((a, b) => a.localeCompare(b));
+            for (const t of typeNames) {
+              byType[t].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+            }
+            return (
+              <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
+                {typeNames.map((t) => (
+                  <div key={t}>
+                    {byType[t].map((s, i) => (
+                      <button key={s.id || i} onClick={() => openSession(s)}
+                        style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "11px 0", border: "none", background: "transparent", borderTop: i === 0 ? "none" : "1px solid " + BRAND.grey2, textAlign: "left", cursor: "pointer", width: "100%", fontFamily: "inherit", WebkitTapHighlightColor: "rgba(0,0,0,0.06)" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 600, color: BRAND.sessionTitle || "#0B3B7A", lineHeight: 1.35 }}>{s.title}</div>
+                        </div>
+                        <IconChevR size={14} stroke={BRAND.grey3} sw={2} style={{ marginTop: 4, flexShrink: 0 }}/>
+                      </button>
+                    ))}
                   </div>
-                </div>
-                <IconChevR size={14} stroke={BRAND.grey3} sw={2} style={{ marginTop: 4, flexShrink: 0 }}/>
-              </button>
-            ))}
-          </div>
+                ))}
+              </div>
+            );
+          })()}
         </InfoBlock>
       ) : (
         <div style={{ background: "#fff", borderRadius: 12, padding: "16px 16px", marginBottom: 10, fontSize: 13, color: BRAND.grey11, lineHeight: 1.5 }}>
