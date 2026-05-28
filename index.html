@@ -35832,11 +35832,6 @@ function GlobalSearch({ open, onClose }) {
   const [view, setView] = useStateGS("typeahead");    // "typeahead" | "results"
   const [activeIdx, setActiveIdx] = useStateGS(0);
   const [detailSession, setDetailSession] = useStateGS(null); // result item for opened session
-  // Ask-ASCEND (natural-language) state
-  const [askMode, setAskMode] = useStateGS(false);
-  const [askLoading, setAskLoading] = useStateGS(false);
-  const [askResult, setAskResult] = useStateGS(null);  // { summary, picks: [...] } or null
-  const [askError, setAskError] = useStateGS(null);
   const inputRef = useRefGS(null);
 
   // Read the current lens once when the search opens so the index is
@@ -35859,10 +35854,6 @@ function GlobalSearch({ open, onClose }) {
       setView("typeahead");
       setActiveIdx(0);
       setDetailSession(null);
-      setAskMode(false);
-      setAskResult(null);
-      setAskError(null);
-      setAskLoading(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -35875,32 +35866,6 @@ function GlobalSearch({ open, onClose }) {
     setCommittedQ(text);
     setView("results");
     setDetailSession(null);
-  }
-
-  // Run an Ask-ASCEND natural-language query. Audience is inferred from the
-  // dashboard variant (STUDENT_VIEW flag), defaulting to "both" on directors.
-  async function runAsk(query) {
-    const text = (query ?? q).trim();
-    if (!text) return;
-    if (!window.AskAscend || !window.AskAscend.askAscend) {
-      setAskError("Ask ASCEND not available. (ask-ascend.js failed to load.)");
-      setView("ask");
-      return;
-    }
-    setView("ask");
-    setAskLoading(true);
-    setAskError(null);
-    setAskResult(null);
-    setDetailSession(null);
-    try {
-      const audience = (typeof window !== "undefined" && window.STUDENT_VIEW) ? "student" : "both";
-      const res = await window.AskAscend.askAscend(text, { audience });
-      setAskResult(res);
-    } catch (e) {
-      setAskError(String(e && e.message ? e.message : e));
-    } finally {
-      setAskLoading(false);
-    }
   }
 
   function onKeyTypeahead(e) {
