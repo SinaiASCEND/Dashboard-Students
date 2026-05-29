@@ -35037,10 +35037,6 @@ function Topbar({ variantLabel, role, onRoleChange, crumbs = [], roles }) {
           ))}
         </div>
       )}
-      <button className="icon-btn" title="Search (⌘K)" aria-label="Search"
-        onClick={() => window.openGlobalSearch?.()}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      </button>
       <button className="cta" onClick={() => {
         // Universal top-bar export → trigger browser print so user can Save as PDF.
         window.print();
@@ -40105,7 +40101,7 @@ function AlignmentPanel({ session, alignment, hoveredObjIdx, mod }) {
         <>
           <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, lineHeight: 1.35, color: "var(--session-title)" }}>{session.title}</div>
           <div style={{ fontSize: 11, color: "var(--grey-11)", marginTop: 4 }}>
-            {mod?.name} · Week {session.week} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
+            {mod?.name} · {window.shortTypeCode(session.type, mod?.id, mod?.phase)}
           </div>
           <div style={{ fontSize: 11, color: "var(--brand-magenta)", marginTop: 8, fontStyle: "italic" }}>
             {hoveredObjIdx != null ? `Showing trace for objective ${hoveredObjIdx + 1} only` : "Showing trace for all objectives in this session"}
@@ -40399,7 +40395,7 @@ function VariantE() {
           </div>
 
           {/* Search bar */}
-          <div style={{ marginTop: 16, marginBottom: 16, display: "flex", gap: 10, alignItems: "center", background: "var(--paper)", padding: "10px 14px", border: "1px solid var(--grey-3)", borderRadius: 8 }}>
+          <div style={{ marginTop: 16, marginBottom: 16, display: "flex", gap: 10, alignItems: "center", background: "#FFF7E6", padding: "10px 14px", border: "1.5px solid #F0C674", borderRadius: 8 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--grey-11)" strokeWidth="2">
               <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
             </svg>
@@ -40738,7 +40734,7 @@ function VariantOCA() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, minWidth: 240 }}>
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, module…"
-                     style={{ width: 260, padding: "8px 12px", border: "1px solid var(--grey-3)", borderRadius: 8, fontSize: 13, fontFamily: "var(--font-sans)", outline: "none", color: "var(--ink-1)" }}/>
+                     style={{ width: 260, padding: "8px 12px", background: "#FFF7E6", border: "1.5px solid #F0C674", borderRadius: 8, fontSize: 13, fontFamily: "var(--font-sans)", outline: "none", color: "var(--ink-1)" }}/>
               <div style={{ fontSize: 11, color: "var(--grey-11)", fontFamily: "var(--font-mono)" }}>
                 {tokens.length ? `${filteredCount} of ${totalPeople}` : `${totalPeople} people · ${directory.length} sections`}
               </div>
@@ -41103,19 +41099,29 @@ function LensBar({ lensObj, lensId, setLensId, lenses, onOpenManage, onOpenSearc
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <button
           onClick={onOpenSearch}
-          title="Search (⌘K)"
+          title="Search keywords, sessions, modules, MEPOs, MLOs (⌘K)"
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            padding: "6px 10px", fontSize: 12, color: "var(--grey-11)",
-            background: "var(--grey-1)", border: "1px solid var(--grey-3)",
+            padding: "7px 14px", fontSize: 12.5, color: "#7A4A00",
+            background: "#FFF4D6", border: "1.5px solid #E0A800",
             borderRadius: 6, cursor: "pointer", fontFamily: "var(--font-sans)",
-            minWidth: 180,
+            minWidth: 240, fontWeight: 700,
+            boxShadow: "0 1px 3px rgba(224, 168, 0, 0.25)",
+            transition: "background 0.12s, box-shadow 0.12s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#FFE9A8";
+            e.currentTarget.style.boxShadow = "0 2px 6px rgba(224, 168, 0, 0.35)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#FFF4D6";
+            e.currentTarget.style.boxShadow = "0 1px 3px rgba(224, 168, 0, 0.25)";
           }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A06A00" strokeWidth="2.3">
             <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
           </svg>
-          <span style={{ flex: 1, textAlign: "left", fontWeight: 600, letterSpacing: "0.04em" }}>ASCEND</span>
-          <span style={{ fontSize: 10, padding: "1px 5px", border: "1px solid var(--grey-3)", borderRadius: 3, background: "var(--paper)", color: "var(--grey-11)" }}>
+          <span style={{ flex: 1, textAlign: "left", letterSpacing: "0.02em" }}>Search ASCEND</span>
+          <span style={{ fontSize: 10, padding: "1px 5px", border: "1px solid #E0A800", borderRadius: 3, background: "#fff", color: "#7A4A00", fontWeight: 700 }}>
             {isMac ? "⌘K" : "Ctrl+K"}
           </span>
         </button>
@@ -41648,7 +41654,7 @@ function ElectivesList({ onOpen, onOpenFilters, savedSet, onToggleSave }) {
         </div>
         {/* Search */}
         <div style={{ padding: "0 14px" }}>
-          <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
+          <div style={{ background: "#FFF7E6", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.1)", border: "1.5px solid #F0C674" }}>
             <IconSearch size={18} stroke={BRAND.grey11} sw={2}/>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search electives, code, track" autoCorrect="off" autoCapitalize="off"
               style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: sans, color: BRAND.ink, minWidth: 0 }}/>
@@ -42388,7 +42394,7 @@ function CurriculumSearch({ onOpenResult, onOpenPlaceholder, q, setQ, navPath, s
           <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: -0.2 }}>ASCEND Curriculum</div>
         </div>
         <div style={{ padding: "0 14px" }}>
-          <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
+          <div style={{ background: "#FFF7E6", borderRadius: 12, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.1)", border: "1.5px solid #F0C674" }}>
             <IconSearch size={18} stroke={BRAND.grey11} sw={2}/>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search sessions, modules, MEPOs, MLOs…" autoCorrect="off" autoCapitalize="off"
               style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontFamily: sans, color: BRAND.ink, minWidth: 0 }}/>
@@ -43492,7 +43498,7 @@ function MepoListTab({ onOpenMepo }) {
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px 18px", WebkitOverflowScrolling: "touch" }}>
         {/* Search + sort + uncovered toggle */}
-        <div style={{ background: "#fff", borderRadius: 12, padding: "10px 12px", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", marginBottom: 10 }}>
+        <div style={{ background: "#FFF7E6", borderRadius: 12, padding: "10px 12px", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", border: "1.5px solid #F0C674", marginBottom: 10 }}>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
